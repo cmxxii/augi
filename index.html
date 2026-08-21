@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Augusta — Household Hub</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- LOGIN SCREEN — shown when not logged in, hidden once you are -->
+  <div id="login-screen">
+    <div id="login-card">
+      <h1>🏠 Augusta</h1>
+      <p>Sign in to access household hub.</p>
+      <form id="login-form">
+        <input type="email" id="login-email" placeholder="Email address" required />
+        <input type="password" id="login-password" placeholder="Password" required />
+        <button type="submit" class="btn-primary">Sign in</button>
+        <p id="login-error" class="error-msg hidden"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- MAIN APP — hidden until logged in -->
+  <div id="app" class="hidden">
+    <header class="top-bar">
+      <h1>🏠 Augusta</h1>
+      <div class="who-am-i">
+        <span id="logged-in-name"></span>
+        <button id="sign-out-btn" class="btn-text">Sign out</button>
+      </div>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab-button active" data-tab="chores-tab">Chores</button>
+      <button class="tab-button" data-tab="inventory-tab">Inventory</button>
+      <button class="tab-button" data-tab="groceries-tab">Groceries</button>
+    </nav>
+
+    <!-- CHORES TAB -->
+    <main id="chores-tab" class="tab-panel active">
+      <div class="panel-header">
+        <h2>Chores</h2>
+        <button id="show-add-chore" class="btn-secondary">+ Add chore</button>
+      </div>
+      <form id="add-chore-form" class="add-form hidden">
+        <input type="text" id="chore-name" placeholder="Chore name (e.g. Sweep and vacuum)" required />
+        <input type="text" id="chore-room" placeholder="Room (optional, e.g. Kitchen)" />
+        <select id="chore-frequency-type">
+          <option value="interval_days">Every X days</option>
+          <option value="weekly_on_days">On specific weekday(s)</option>
+          <option value="monthly_on_day">On a day of the month</option>
+        </select>
+        <input type="number" id="chore-interval-days" placeholder="Every how many days? (e.g. 7)" min="1" />
+        <div id="chore-weekdays-picker" class="weekday-picker hidden">
+          <label><input type="checkbox" value="0" /> Mon</label>
+          <label><input type="checkbox" value="1" /> Tue</label>
+          <label><input type="checkbox" value="2" /> Wed</label>
+          <label><input type="checkbox" value="3" /> Thu</label>
+          <label><input type="checkbox" value="4" /> Fri</label>
+          <label><input type="checkbox" value="5" /> Sat</label>
+          <label><input type="checkbox" value="6" /> Sun</label>
+        </div>
+        <input type="number" id="chore-day-of-month" placeholder="Day of month (1-31)" min="1" max="31" class="hidden" />
+        <div class="form-buttons">
+          <button type="submit" class="btn-primary">Save chore</button>
+          <button type="button" id="cancel-add-chore" class="btn-text">Cancel</button>
+        </div>
+      </form>
+      <div id="chores-list" class="list"></div>
+    </main>
+
+    <!-- INVENTORY TAB -->
+    <main id="inventory-tab" class="tab-panel">
+      <div class="panel-header">
+        <h2>Inventory</h2>
+        <button id="show-add-item" class="btn-secondary">+ Add item</button>
+      </div>
+      <form id="add-item-form" class="add-form hidden">
+        <input type="text" id="item-name" placeholder="Item name (e.g. Trash bags)" required />
+        <input type="text" id="item-category" placeholder="Category (optional, e.g. Cleaning)" />
+        <div class="form-buttons">
+          <button type="submit" class="btn-primary">Save item</button>
+          <button type="button" id="cancel-add-item" class="btn-text">Cancel</button>
+        </div>
+      </form>
+      <div id="inventory-list" class="list"></div>
+    </main>
+
+    <!-- GROCERIES TAB -->
+    <main id="groceries-tab" class="tab-panel">
+      <div class="panel-header">
+        <h2>Groceries</h2>
+        <button id="show-add-grocery" class="btn-secondary">+ Add request</button>
+      </div>
+      <form id="add-grocery-form" class="add-form hidden">
+        <input type="text" id="grocery-item" placeholder="Item (e.g. Pretzels)" required />
+        <input type="text" id="grocery-note" placeholder="Note (optional, e.g. Snyder's honey mustard)" />
+        <div class="form-buttons">
+          <button type="submit" class="btn-primary">Add to list</button>
+          <button type="button" id="cancel-add-grocery" class="btn-text">Cancel</button>
+        </div>
+      </form>
+      <div id="groceries-list" class="list"></div>
+      <details id="purchased-details">
+        <summary>Recently purchased</summary>
+        <div id="purchased-list" class="list"></div>
+      </details>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
