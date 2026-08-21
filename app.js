@@ -7,11 +7,19 @@ const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // Tracks the currently logged-in user (set on auth state change below)
 let currentUser = null;
 
-// Helper: the display name for a user is the part before @ in their email
-// e.g. camille@gmail.com → "camille"
+// Cache of email → display name, loaded once after login
+let displayNameCache = {};
+
+async function loadDisplayNameCache() {
+  const { data, error } = await db.from("people").select("user_email, display_name");
+  if (!error && data) {
+    displayNameCache = Object.fromEntries(data.map((row) => [row.user_email, row.display_name]));
+  }
+}
+
 function displayName(user) {
   if (!user) return "";
-  return user.email.split("@")[0];
+  return displayNameCache[user.email] || user.email.split("@")[0];
 }
 
 // ============================================================
@@ -21,18 +29,17 @@ function displayName(user) {
 // This runs automatically whenever auth state changes (login, logout,
 // or on page load if a session already exists from a previous visit).
 // It's the central place that shows/hides the login screen vs. the app.
-db.auth.onAuthStateChange((_event, session) => {
+db.auth.onAuthStateChange(async (_event, session) => {
   if (session) {
-    // Logged in
-    currentUser = session.user;
-    document.getElementById("login-screen").classList.add("hidden");
-    document.getElementById("app").classList.remove("hidden");
-    document.getElementById("logged-in-name").textContent = displayName(currentUser);
-    // Load all data now that we know who's logged in
-    loadChores();
-    loadInventory();
-    loadGroceries();
-  } else {
+  currentUser = session.user;
+  document.getElementById("login-screen").classList.add("hidden");
+  document.getElementById("app").classList.remove("hidden");
+  await loadDisplayNameCache();
+  document.getElementById("logged-in-name").textContent = displayName(currentUser);
+  loadChores();
+  loadInventory();
+  loadGroceries();
+} else {
     // Not logged in — show the login screen
     currentUser = null;
     document.getElementById("login-screen").classList.remove("hidden");
