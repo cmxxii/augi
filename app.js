@@ -7,6 +7,29 @@ const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // Tracks the currently logged-in user (set on auth state change below)
 let currentUser = null;
 
+// Room selection dropdown
+let roomsCache = []; // [{id, name}]
+
+async function loadRoomsCache() {
+  const { data, error } = await db.from("rooms").select("*").order("sorting");
+  if (!error && data) roomsCache = data;
+}
+
+function roomName(roomId) {
+  const room = roomsCache.find((r) => r.id === roomId);
+  return room ? room.name : "No room";
+}
+
+function renderRoomOptions() {
+  const select = document.getElementById("chore-room");
+  const current = select.value;
+  select.innerHTML =
+    `<option value="">No room</option>` +
+    roomsCache.map((r) => `<option value="${r.id}">${r.name}</option>`).join("");
+  select.value = current;
+}
+
+
 // Cache of email → display name, loaded once after login
 let displayNameCache = {};
 
@@ -35,6 +58,8 @@ db.auth.onAuthStateChange(async (_event, session) => {
   document.getElementById("login-screen").classList.add("hidden");
   document.getElementById("app").classList.remove("hidden");
   await loadDisplayNameCache();
+  await loadRoomsCache();
+  renderRoomOptions();
   document.getElementById("logged-in-name").textContent = displayName(currentUser);
   loadChores();
   loadInventory();
@@ -153,24 +178,57 @@ async function loadChores() {
     return;
   }
 
-  const sorted = chores
-    .map((c) => ({ chore: c, due: nextDueDate(c) }))
-    .sort((a, b) => a.due - b.due);
+  const listEl = document.getElementById("chores-list");
+  if (chores.length === 0) {
+    listEl.innerHTML = "<p>No chores yet — add your first one above.</p>";
+    return;
+  }
 
-  document.getElementById("chores-list").innerHTML = sorted
-    .map(({ chore, due }) => {
-      const status = dueStatus(due);
+  // group chores by room
+  const groups = {};
+  chores.forEach((c) => {
+    const key = c.room_id || "none";
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(c);
+  });
+
+  // room order, "No room" always last
+  const roomKeys = Object.keys(groups).sort((a, b) => {
+    if (a === "none") return 1;
+    if (b === "none") return -1;
+    const roomA = roomsCache.find((r) => r.id === a);
+    const roomB = roomsCache.find((r) => r.id === b);
+    return (roomA?.sorting || "").localeCompare(roomB?.sorting || "");
+  });
+
+  listEl.innerHTML = roomKeys
+    .map((key) => {
+      const groupChores = groups[key]
+        .map((c) => ({ chore: c, due: nextDueDate(c) }))
+        .sort((a, b) => a.due - b.due);
+
+      const roomLabel = key === "none" ? "No room" : roomName(key);
+
       return `
-        <div class="card">
-          <div class="card-info">
-            <strong>${chore.name}${chore.room ? ` <span class="meta">(${chore.room})</span>` : ""}</strong>
-            <div class="meta ${status.className}">${status.label} · ${frequencyLabel(chore)}</div>
-            <div class="meta">${lastDoneLabel(chore)}</div>
-          </div>
-          <button class="btn-primary" onclick="markChoreDone('${chore.id}')">Mark done</button>
+        <div class="room-group">
+          <h3 class="room-heading">${roomLabel}</h3>
+          ${groupChores
+            .map(({ chore, due }) => {
+              const status = dueStatus(due);
+              return `
+                <div class="card">
+                  <div class="card-info">
+                    <strong>${chore.name}</strong>
+                    <div class="meta ${status.className}">${status.label} · ${frequencyLabel(chore)}</div>
+                    <div class="meta">${lastDoneLabel(chore)}</div>
+                  </div>
+                  <button class="btn-primary" onclick="markChoreDone('${chore.id}')">Mark done</button>
+                </div>`;
+            })
+            .join("")}
         </div>`;
     })
-    .join("") || "<p>No chores yet — add your first one above.</p>";
+    .join("");
 }
 
 async function markChoreDone(choreId) {
@@ -292,13 +350,25 @@ async function loadGroceries() {
   document.getElementById("purchased-list").innerHTML = purchased
     .map((item) => `
       <div class="card">
-        <div class="card-info"><strong>${item.item_name}</strong></div>
+        <div class="card-info"><strong>${item.item_name}</strong>
+        ${item.note ? ` <span class="meta">${item.note}</span>` : ""}
+        </div>
+        <button class="btn-secondary" onclick="addBackToList('${item.id}')">Add back to list</button>
       </div>`)
-    .join("") || "<p>Nothing purchased yet.</p>";
+    .join("") || "<p>Empty</p>";
 }
 
 async function markPurchased(itemId) {
   await db.from("grocery_requests").update({ status: "purchased" }).eq("id", itemId);
+  loadGroceries();
+}
+
+async function addBackToList(itemId) {
+  await db.from("grocery_requests").update({
+    status: "requested",
+    created_at: new Date().toISOString(), // bumps it back to the top
+    requested_by: displayName(currentUser), // credits whoever re-added it
+  }).eq("id", itemId);
   loadGroceries();
 }
 

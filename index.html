@@ -46,9 +46,11 @@
       </div>
       <form id="add-chore-form" class="add-form hidden">
         <input type="text" id="chore-name" placeholder="Chore name (e.g. Sweep and vacuum)" required />
-        <input type="text" id="chore-room" placeholder="Room (optional, e.g. Kitchen)" />
+        <select id="chore-room">
+          <option value="">No room</option>
+        </select>
         <select id="chore-frequency-type">
-          <option value="interval_days">Every X days</option>
+          <option value="interval_days">Every # days</option>
           <option value="weekly_on_days">On specific weekday(s)</option>
           <option value="monthly_on_day">On a day of the month</option>
         </select>
@@ -104,7 +106,7 @@
       </form>
       <div id="groceries-list" class="list"></div>
       <details id="purchased-details">
-        <summary>Recently purchased</summary>
+        <summary>Past items</summary>
         <div id="purchased-list" class="list"></div>
       </details>
     </main>
