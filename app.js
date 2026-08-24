@@ -21,7 +21,7 @@ function roomName(roomId) {
 }
 
 function roomIcon(wip_icon) {
-  const n = (wip_icon || "").toLowerCase();
+  const n = (wip_icon).toLowerCase();
   if (n.includes("out")) return "🏡";
   if (n.includes("car")) return "🚗";
   if (n.includes("cook")) return "🍳";
@@ -221,10 +221,11 @@ async function loadChores() {
         .sort((a, b) => a.due - b.due);
 
       const roomLabel = key === "none" ? "No room" : roomName(key);
+      const roomIconKey = key === "none" ? "" : (roomsCache.find((r) => r.id === key)?.wip_icon || "");
 
       return `
         <div class="room-group">
-          <h3 class="room-heading">${roomIcon(roomLabel)}<span>${roomLabel}</span></h3>
+          <h3 class="room-heading">${roomIcon(roomIconKey)}<span>${roomLabel}</span></h3>
           ${groupChores
             .map(({ chore, due }) => {
               const status = dueStatus(due);
