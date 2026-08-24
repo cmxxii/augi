@@ -20,6 +20,19 @@ function roomName(roomId) {
   return room ? room.name : "No room";
 }
 
+function roomIcon(wip_icon) {
+  const n = (wip_icon || "").toLowerCase();
+  if (n.includes("out")) return "🏡";
+  if (n.includes("car")) return "🚗";
+  if (n.includes("cook")) return "🍳";
+  if (n.includes("table")) return "🪑";
+  if (n.includes("couch")) return "🛋️";
+  if (n.includes("bath")) return "🚽";
+  if (n.includes("hall")) return "🧺";
+  if (n.includes("bed")) return "🛏️";
+  return "🚪"; // fallback for "No room" or any other custom room
+}
+
 function renderRoomOptions() {
   const select = document.getElementById("chore-room");
   const current = select.value;
@@ -211,7 +224,7 @@ async function loadChores() {
 
       return `
         <div class="room-group">
-          <h3 class="room-heading">${roomLabel}</h3>
+          <h3 class="room-heading">${roomIcon(roomLabel)}<span>${roomLabel}</span></h3>
           ${groupChores
             .map(({ chore, due }) => {
               const status = dueStatus(due);
@@ -260,7 +273,7 @@ addChoreForm.addEventListener("submit", async (e) => {
   const type = frequencyTypeSelect.value;
   await db.from("chores").insert({
     name: document.getElementById("chore-name").value,
-    room: document.getElementById("chore-room").value || null,
+    room_id: document.getElementById("chore-room").value || null,
     frequency_type: type,
     frequency_interval_days: type === "interval_days"
       ? Number(document.getElementById("chore-interval-days").value) : null,
