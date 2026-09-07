@@ -7,6 +7,8 @@ const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // Tracks the currently logged-in user (set on auth state change below)
 let currentUser = null;
 
+let editingChoreId = null;
+
 // Room selection dropdown
 let roomsCache = []; // [{id, name}]
 
@@ -226,8 +228,9 @@ async function loadChores() {
       return `
         <div class="room-group">
           <h3 class="room-heading">${roomIcon(roomIconKey)}<span>${roomLabel}</span></h3>
-          ${groupChores
+           ${groupChores
             .map(({ chore, due }) => {
+              if (chore.id === editingChoreId) return renderChoreEditForm(chore);
               const status = dueStatus(due);
               return `
                 <div class="card">
@@ -236,13 +239,86 @@ async function loadChores() {
                     <div class="meta ${status.className}">${status.label} · ${frequencyLabel(chore)}</div>
                     <div class="meta">${lastDoneLabel(chore)}</div>
                   </div>
-                  <button class="btn-primary" onclick="markChoreDone('${chore.id}')">Mark done</button>
+                  <div class="card-buttons">
+                    <button class="btn-primary" onclick="markChoreDone('${chore.id}')">Mark done</button>
+                    <button class="btn-text" onclick="startEditChore('${chore.id}')">Edit</button>
+                  </div>
                 </div>`;
             })
             .join("")}
         </div>`;
     })
     .join("");
+}
+
+function renderChoreEditForm(chore) {
+  const roomOptions = roomsCache
+    .map((r) => `<option value="${r.id}" ${r.id === chore.room_id ? "selected" : ""}>${r.name}</option>`)
+    .join("");
+
+  const type = chore.frequency_type;
+  const weekdayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const checkedDays = chore.frequency_weekdays || [];
+  const weekdayCheckboxes = weekdayNames
+    .map((label, i) => `<label><input type="checkbox" value="${i}" ${checkedDays.includes(i) ? "checked" : ""} /> ${label}</label>`)
+    .join("");
+
+  return `
+    <div class="card add-form">
+      <input type="text" id="edit-name-${chore.id}" value="${chore.name}" />
+      <select id="edit-room-${chore.id}">
+        <option value="">No room</option>
+        ${roomOptions}
+      </select>
+      <select id="edit-frequency-type-${chore.id}" onchange="toggleEditFrequencyFields('${chore.id}')">
+        <option value="interval_days" ${type === "interval_days" ? "selected" : ""}>Every # days</option>
+        <option value="weekly_on_days" ${type === "weekly_on_days" ? "selected" : ""}>On specific weekday(s)</option>
+      </select>
+      <input type="number" id="edit-interval-days-${chore.id}" min="1"
+        value="${chore.frequency_interval_days || ""}"
+        class="${type === "interval_days" ? "" : "hidden"}" />
+      <div id="edit-weekdays-${chore.id}" class="weekday-picker ${type === "weekly_on_days" ? "" : "hidden"}">
+        ${weekdayCheckboxes}
+      </div>
+      <div class="form-buttons">
+        <button class="btn-primary" onclick="saveEditChore('${chore.id}')">Save</button>
+        <button class="btn-text" onclick="cancelEditChore()">Cancel</button>
+      </div>
+    </div>`;
+}
+
+function toggleEditFrequencyFields(choreId) {
+  const type = document.getElementById(`edit-frequency-type-${choreId}`).value;
+  document.getElementById(`edit-interval-days-${choreId}`).classList.toggle("hidden", type !== "interval_days");
+  document.getElementById(`edit-weekdays-${choreId}`).classList.toggle("hidden", type !== "weekly_on_days");
+}
+
+function startEditChore(choreId) {
+  editingChoreId = choreId;
+  loadChores();
+}
+
+function cancelEditChore() {
+  editingChoreId = null;
+  loadChores();
+}
+
+async function saveEditChore(choreId) {
+  const type = document.getElementById(`edit-frequency-type-${choreId}`).value;
+
+  await db.from("chores").update({
+    name: document.getElementById(`edit-name-${choreId}`).value,
+    room_id: document.getElementById(`edit-room-${choreId}`).value || null,
+    frequency_type: type,
+    frequency_interval_days: type === "interval_days"
+      ? Number(document.getElementById(`edit-interval-days-${choreId}`).value) : null,
+    frequency_weekdays: type === "weekly_on_days"
+      ? [...document.querySelectorAll(`#edit-weekdays-${choreId} input:checked`)].map((cb) => Number(cb.value))
+      : null,
+  }).eq("id", choreId);
+
+  editingChoreId = null;
+  loadChores();
 }
 
 async function markChoreDone(choreId) {
@@ -266,7 +342,6 @@ frequencyTypeSelect.addEventListener("change", () => {
   const type = frequencyTypeSelect.value;
   document.getElementById("chore-interval-days").classList.toggle("hidden", type !== "interval_days");
   document.getElementById("chore-weekdays-picker").classList.toggle("hidden", type !== "weekly_on_days");
-  document.getElementById("chore-day-of-month").classList.toggle("hidden", type !== "monthly_on_day");
 });
 
 addChoreForm.addEventListener("submit", async (e) => {
@@ -281,8 +356,6 @@ addChoreForm.addEventListener("submit", async (e) => {
     frequency_weekdays: type === "weekly_on_days"
       ? [...document.querySelectorAll("#chore-weekdays-picker input:checked")].map((cb) => Number(cb.value))
       : null,
-    frequency_day_of_month: type === "monthly_on_day"
-      ? Number(document.getElementById("chore-day-of-month").value) : null,
   });
   addChoreForm.reset();
   addChoreForm.classList.add("hidden");
