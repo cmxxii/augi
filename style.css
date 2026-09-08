@@ -252,8 +252,9 @@ body {
 }
 
 .card-info .meta {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--color-text-muted);
+  margin-bottom: 4px;
 }
 
 .due-overdue { color: var(--color-overdue); font-weight: 600; }
@@ -362,6 +363,15 @@ body {
   font-size: 0.85rem;
   color: var(--color-text-muted);
   margin: 0 0 10px 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.room-label,
+.last-done-label {
+  margin-top: 4px;
+  margin-bottom: 2px;
+  font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }

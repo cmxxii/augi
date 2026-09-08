@@ -68,15 +68,15 @@ async function loadHistory() {
 
   document.getElementById("history-list").innerHTML = filtered
     .map((c) => {
-      const when = new Date(c.completed_at).toLocaleString();
+      const when = new Date(c.completed_at).toLocaleDateString();
       const who = displayNameCache[c.completed_by] || c.completed_by.split("@")[0];
       const choreName = c.chores?.name || "Unknown chore";
       const roomLabel = c.chores?.room_id ? roomName(c.chores.room_id) : "No room";
       return `
         <div class="card">
-          <div class="card-info">
-            <strong>${choreName}</strong>
+         <div class="card-info">
             <div class="meta room-label">${roomLabel}</div>
+            <strong>${choreName}</strong>
             <div class="meta">${who} · ${when}</div>
           </div>
         </div>`;
@@ -308,10 +308,10 @@ function renderChoreCard(chore, due, showRoomLabel) {
   return `
     <div class="card ${status.className}">
       <div class="card-info">
-        <strong>${chore.name}</strong>
         ${roomLabelHtml}
+        <strong>${chore.name}</strong>
         <div class="meta ${status.className}">${status.label} · ${frequencyLabel(chore)}</div>
-        <div class="meta">${lastDoneLabel(chore)}</div>
+        <div class="meta last-done-label">${lastDoneLabel(chore)}</div>
       </div>
       <div class="card-buttons">
         <button class="btn-primary" onclick="markChoreDone('${chore.id}')">Mark done</button>
