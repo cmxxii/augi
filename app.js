@@ -9,6 +9,8 @@ let currentUser = null;
 
 let editingChoreId = null;
 
+let editingGroceryId = null;
+
 // Room selection dropdown
 let roomsCache = []; // [{id, name}]
 
@@ -424,14 +426,20 @@ async function loadGroceries() {
   const purchased = items.filter((i) => i.status === "purchased");
 
   document.getElementById("groceries-list").innerHTML = active
-    .map((item) => `
+    .map((item) => {
+      if (item.id === editingGroceryId) return renderGroceryEditForm(item);
+      return `
       <div class="card">
         <div class="card-info">
           <strong>${item.item_name}</strong>
           <div class="meta">${item.note ? item.note + " · " : ""}requested by ${item.requested_by || "someone"}</div>
         </div>
-        <button class="btn-secondary" onclick="markPurchased('${item.id}')">Mark purchased</button>
-      </div>`)
+        <div class="card-buttons">
+          <button class="btn-secondary" onclick="markPurchased('${item.id}')">Mark purchased</button>
+          <button class="btn-text" onclick="startEditGrocery('${item.id}')">Edit</button>
+        </div>
+      </div>`;
+    })
     .join("") || "<p>No requests right now.</p>";
 
   document.getElementById("purchased-list").innerHTML = purchased
@@ -443,6 +451,37 @@ async function loadGroceries() {
         <button class="btn-secondary" onclick="addBackToList('${item.id}')">Add back to list</button>
       </div>`)
     .join("") || "<p>Empty</p>";
+}
+
+function renderGroceryEditForm(item) {
+  return `
+    <div class="card add-form">
+      <input type="text" id="edit-grocery-item-${item.id}" value="${item.item_name}" />
+      <input type="text" id="edit-grocery-note-${item.id}" value="${item.note || ""}" placeholder="Note (optional)" />
+      <div class="form-buttons">
+        <button class="btn-primary" onclick="saveEditGrocery('${item.id}')">Save</button>
+        <button class="btn-text" onclick="cancelEditGrocery()">Cancel</button>
+      </div>
+    </div>`;
+}
+
+function startEditGrocery(itemId) {
+  editingGroceryId = itemId;
+  loadGroceries();
+}
+
+function cancelEditGrocery() {
+  editingGroceryId = null;
+  loadGroceries();
+}
+
+async function saveEditGrocery(itemId) {
+  await db.from("grocery_requests").update({
+    item_name: document.getElementById(`edit-grocery-item-${itemId}`).value,
+    note: document.getElementById(`edit-grocery-note-${itemId}`).value || null,
+  }).eq("id", itemId);
+  editingGroceryId = null;
+  loadGroceries();
 }
 
 async function markPurchased(itemId) {
