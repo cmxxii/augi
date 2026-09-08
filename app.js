@@ -46,6 +46,50 @@ function renderRoomOptions() {
   select.value = current;
 }
 
+function populateHistoryFilters() {
+  const roomSelect = document.getElementById("history-room-filter");
+  roomSelect.innerHTML = `<option value="">All rooms</option>` +
+    roomsCache.map((r) => `<option value="${r.id}">${r.name}</option>`).join("");
+
+  const personSelect = document.getElementById("history-person-filter");
+  personSelect.innerHTML = `<option value="">All people</option>` +
+    Object.entries(displayNameCache).map(([email, name]) => `<option value="${email}">${name}</option>`).join("");
+}
+
+async function loadHistory() {
+  const { data: completions, error } = await db
+    .from("chore_completions")
+    .select("*, chores(name, room_id)")
+    .order("completed_at", { ascending: false });
+  if (error) { console.error(error); return; }
+
+  const roomFilter = document.getElementById("history-room-filter").value;
+  const personFilter = document.getElementById("history-person-filter").value;
+
+  const filtered = completions.filter((c) => {
+    if (roomFilter && c.chores?.room_id !== roomFilter) return false;
+    if (personFilter && c.completed_by !== personFilter) return false;
+    return true;
+  });
+
+  document.getElementById("history-list").innerHTML = filtered
+    .map((c) => {
+      const when = new Date(c.completed_at).toLocaleString();
+      const who = displayNameCache[c.completed_by] || c.completed_by.split("@")[0];
+      const choreName = c.chores?.name || "Unknown chore";
+      return `
+        <div class="card">
+          <div class="card-info">
+            <strong>${choreName}</strong>
+            <div class="meta">${who} · ${when}</div>
+          </div>
+        </div>`;
+    })
+    .join("") || "<p>No history yet.</p>";
+}
+
+document.getElementById("history-room-filter").addEventListener("change", loadHistory);
+document.getElementById("history-person-filter").addEventListener("change", loadHistory);
 
 // Cache of email → display name, loaded once after login
 let displayNameCache = {};
@@ -81,6 +125,8 @@ db.auth.onAuthStateChange(async (_event, session) => {
   loadChores();
   loadInventory();
   loadGroceries();
+  populateHistoryFilters();
+  loadHistory();
 } else {
     // Not logged in — show the login screen
     currentUser = null;
