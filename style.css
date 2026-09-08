@@ -231,6 +231,18 @@ body {
   color: var(--color-text-muted);
 }
 
+.header-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+#toggle-chore-edit-mode.active,
+#toggle-grocery-edit-mode.active {
+  background: var(--color-accent);
+  color: white;
+  border-color: var(--color-accent);
+}
+
 /* Forms */
 .add-form {
   display: flex;

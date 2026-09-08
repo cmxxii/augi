@@ -54,7 +54,10 @@
     <main id="chores-tab" class="tab-panel active">
       <div class="panel-header">
         <h2>Chores</h2>
-        <button id="show-add-chore" class="btn-secondary">+ Add chore</button>
+        <div class="header-buttons">
+          <button id="toggle-chore-edit-mode" class="btn-secondary">Edit mode: Off</button>
+          <button id="show-add-chore" class="btn-secondary">+ Add chore</button>
+        </div>
       </div>
       <form id="add-chore-form" class="add-form hidden">
         <input type="text" id="chore-name" placeholder="Chore name (e.g. Sweep and vacuum)" required />
@@ -126,7 +129,10 @@
     <main id="groceries-tab" class="tab-panel">
       <div class="panel-header">
         <h2>Groceries</h2>
-        <button id="show-add-grocery" class="btn-secondary">+ Add request</button>
+        <div class="header-buttons">
+          <button id="toggle-grocery-edit-mode" class="btn-secondary">Edit mode: Off</button>
+          <button id="show-add-grocery" class="btn-secondary">+ Add request</button>
+        </div>
       </div>
       <form id="add-grocery-form" class="add-form hidden">
         <input type="text" id="grocery-item" placeholder="Item (e.g. Pretzels)" required />

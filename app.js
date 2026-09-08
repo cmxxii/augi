@@ -11,6 +11,9 @@ let editingChoreId = null;
 
 let editingGroceryId = null;
 
+let choreEditMode = false;
+let groceryEditMode = false;
+
 // Room selection dropdown
 let roomsCache = []; // [{id, name}]
 
@@ -86,6 +89,37 @@ async function loadHistory() {
 }
 
 document.getElementById("history-room-filter").addEventListener("change", loadHistory);
+
+document.getElementById("toggle-chore-edit-mode").addEventListener("click", () => {
+  choreEditMode = !choreEditMode;
+  editingChoreId = null;
+  const btn = document.getElementById("toggle-chore-edit-mode");
+  btn.textContent = choreEditMode ? "Edit mode: On" : "Edit mode: Off";
+  btn.classList.toggle("active", choreEditMode);
+  loadChores();
+});
+
+document.getElementById("toggle-grocery-edit-mode").addEventListener("click", () => {
+  groceryEditMode = !groceryEditMode;
+  editingGroceryId = null;
+  const btn = document.getElementById("toggle-grocery-edit-mode");
+  btn.textContent = groceryEditMode ? "Edit mode: On" : "Edit mode: Off";
+  btn.classList.toggle("active", groceryEditMode);
+  loadGroceries();
+});
+
+function resetEditModes() {
+  choreEditMode = false;
+  groceryEditMode = false;
+  editingChoreId = null;
+  editingGroceryId = null;
+  document.getElementById("toggle-chore-edit-mode").textContent = "Edit mode: Off";
+  document.getElementById("toggle-chore-edit-mode").classList.remove("active");
+  document.getElementById("toggle-grocery-edit-mode").textContent = "Edit mode: Off";
+  document.getElementById("toggle-grocery-edit-mode").classList.remove("active");
+  loadChores();
+  loadGroceries();
+}
 
 // Cache of email → display name, loaded once after login
 let displayNameCache = {};
@@ -178,6 +212,7 @@ document.querySelectorAll(".tab-button").forEach((btn) => {
     document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
     btn.classList.add("active");
     document.getElementById(btn.dataset.tab).classList.add("active");
+    resetEditModes();
   });
 });
 
@@ -215,7 +250,7 @@ document.getElementById("home-link").addEventListener("click", () => {
   document.querySelectorAll(".sort-btn").forEach((b) => b.classList.remove("active"));
   document.querySelector('.sort-btn[data-sort="priority"]').classList.add("active");
   choreSortMode = "priority";
-  loadChores();
+  resetEditModes();
 });
 
 
@@ -351,8 +386,8 @@ function renderChoreCard(chore, due, showRoomLabel) {
         <div class="meta last-done-label">${lastDoneLabel(chore)}</div>
       </div>
       <div class="card-buttons">
-        <button class="btn-primary" onclick="markChoreDone('${chore.id}')">Mark done</button>
-        <button class="btn-text" onclick="startEditChore('${chore.id}')">Edit</button>
+        <button class="btn-primary" onclick="markChoreDone('${chore.id}')">DONE</button>
+        ${choreEditMode ? `<button class="btn-text" onclick="startEditChore('${chore.id}')">Edit</button>` : ""}
       </div>
     </div>`;
 }
@@ -539,8 +574,8 @@ async function loadGroceries() {
           <div class="meta">${item.note ? item.note + " · " : ""}requested by ${item.requested_by || "someone"}</div>
         </div>
         <div class="card-buttons">
-          <button class="btn-secondary" onclick="markPurchased('${item.id}')">Mark purchased</button>
-          <button class="btn-text" onclick="startEditGrocery('${item.id}')">Edit</button>
+          <button class="btn-secondary" onclick="markPurchased('${item.id}')">DONE</button>
+          ${groceryEditMode ? `<button class="btn-text" onclick="startEditGrocery('${item.id}')">Edit</button>` : ""}
         </div>
       </div>`;
     })
