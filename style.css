@@ -6,16 +6,16 @@
    ============================================================ */
 
 :root {
-  --color-bg: #faf6f1;         /* warm off-white background */
+  --color-bg: #decdf5;         /* thistle: light lavender background */
   --color-surface: #ffffff;    /* card backgrounds */
-  --color-border: #e8ddd1;
+  --color-border: #9c90ad;
   --color-text: #2b2620;
   --color-text-muted: #7a7267;
-  --color-accent: #c1622e;     /* terracotta — used for buttons/highlights */
-  --color-accent-hover: #a34f22;
-  --color-overdue: #b23b3b;
-  --color-today: #b8860b;
-  --color-ok: #4a7c3a;
+  --color-accent: #404bca;     /* used for buttons/highlights */
+  --color-accent-hover: #29339b; /* egyptian blue */
+  --color-overdue: #eb4b98; /* dragonfruit */
+  --color-today: #f2f230; /* canary yellow */
+  --color-ok: #75b9be; /* tropical teal */
   --radius: 10px;
 }
 
@@ -105,6 +105,59 @@ body {
 .panel-header h2 {
   margin: 0;
   font-size: 1.1rem;
+}
+
+.subtab-nav {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.subtab-button {
+  padding: 8px 14px;
+  border: none;
+  background: none;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.subtab-button.active {
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+  font-weight: 600;
+}
+
+.subtab-panel {
+  display: none;
+}
+
+.subtab-panel.active {
+  display: block;
+}
+
+.sort-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.sort-btn {
+  padding: 6px 12px;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  background: none;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.sort-btn.active {
+  background: var(--color-accent);
+  color: white;
+  border-color: var(--color-accent);
 }
 
 /* Buttons */

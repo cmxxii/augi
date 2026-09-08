@@ -50,10 +50,6 @@ function populateHistoryFilters() {
   const roomSelect = document.getElementById("history-room-filter");
   roomSelect.innerHTML = `<option value="">All rooms</option>` +
     roomsCache.map((r) => `<option value="${r.id}">${r.name}</option>`).join("");
-
-  const personSelect = document.getElementById("history-person-filter");
-  personSelect.innerHTML = `<option value="">All people</option>` +
-    Object.entries(displayNameCache).map(([email, name]) => `<option value="${email}">${name}</option>`).join("");
 }
 
 async function loadHistory() {
@@ -64,11 +60,9 @@ async function loadHistory() {
   if (error) { console.error(error); return; }
 
   const roomFilter = document.getElementById("history-room-filter").value;
-  const personFilter = document.getElementById("history-person-filter").value;
 
   const filtered = completions.filter((c) => {
     if (roomFilter && c.chores?.room_id !== roomFilter) return false;
-    if (personFilter && c.completed_by !== personFilter) return false;
     return true;
   });
 
@@ -77,10 +71,12 @@ async function loadHistory() {
       const when = new Date(c.completed_at).toLocaleString();
       const who = displayNameCache[c.completed_by] || c.completed_by.split("@")[0];
       const choreName = c.chores?.name || "Unknown chore";
+      const roomLabel = c.chores?.room_id ? roomName(c.chores.room_id) : "No room";
       return `
         <div class="card">
           <div class="card-info">
             <strong>${choreName}</strong>
+            <div class="meta room-label">${roomLabel}</div>
             <div class="meta">${who} · ${when}</div>
           </div>
         </div>`;
@@ -89,7 +85,6 @@ async function loadHistory() {
 }
 
 document.getElementById("history-room-filter").addEventListener("change", loadHistory);
-document.getElementById("history-person-filter").addEventListener("change", loadHistory);
 
 // Cache of email → display name, loaded once after login
 let displayNameCache = {};
@@ -171,6 +166,26 @@ document.querySelectorAll(".tab-button").forEach((btn) => {
   });
 });
 
+document.querySelectorAll(".subtab-button").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".subtab-button").forEach((b) => b.classList.remove("active"));
+    document.querySelectorAll(".subtab-panel").forEach((p) => p.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(btn.dataset.subtab).classList.add("active");
+  });
+});
+
+let choreSortMode = "priority";
+
+document.querySelectorAll(".sort-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".sort-btn").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    choreSortMode = btn.dataset.sort;
+    loadChores();
+  });
+});
+
 // ============================================================
 // SECTION 1: CHORES
 // ============================================================
@@ -247,56 +262,62 @@ async function loadChores() {
     return;
   }
 
-  // group chores by room
-  const groups = {};
-  chores.forEach((c) => {
-    const key = c.room_id || "none";
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(c);
-  });
+  const withDue = chores.map((c) => ({ chore: c, due: nextDueDate(c) }));
 
-  // room order, "No room" always last
-  const roomKeys = Object.keys(groups).sort((a, b) => {
-    if (a === "none") return 1;
-    if (b === "none") return -1;
-    const roomA = roomsCache.find((r) => r.id === a);
-    const roomB = roomsCache.find((r) => r.id === b);
-    return (roomA?.sorting || "").localeCompare(roomB?.sorting || "");
-  });
+  if (choreSortMode === "room") {
+    const groups = {};
+    withDue.forEach(({ chore, due }) => {
+      const key = chore.room_id || "none";
+      if (!groups[key]) groups[key] = [];
+      groups[key].push({ chore, due });
+    });
 
-  listEl.innerHTML = roomKeys
-    .map((key) => {
-      const groupChores = groups[key]
-        .map((c) => ({ chore: c, due: nextDueDate(c) }))
-        .sort((a, b) => a.due - b.due);
+    const roomKeys = Object.keys(groups).sort((a, b) => {
+      if (a === "none") return 1;
+      if (b === "none") return -1;
+      const roomA = roomsCache.find((r) => r.id === a);
+      const roomB = roomsCache.find((r) => r.id === b);
+      return (roomA?.sorting || "").localeCompare(roomB?.sorting || "");
+    });
 
-      const roomLabel = key === "none" ? "No room" : roomName(key);
-      const roomIconKey = key === "none" ? "" : (roomsCache.find((r) => r.id === key)?.wip_icon || "");
+    listEl.innerHTML = roomKeys
+      .map((key) => {
+        const groupChores = groups[key].sort((a, b) => a.due - b.due);
+        const roomLabel = key === "none" ? "No room" : roomName(key);
+        const roomIconKey = key === "none" ? "" : (roomsCache.find((r) => r.id === key)?.wip_icon || "");
 
-      return `
-        <div class="room-group">
-          <h3 class="room-heading">${roomIcon(roomIconKey)}<span>${roomLabel}</span></h3>
-           ${groupChores
-            .map(({ chore, due }) => {
-              if (chore.id === editingChoreId) return renderChoreEditForm(chore);
-              const status = dueStatus(due);
-              return `
-                <div class="card">
-                  <div class="card-info">
-                    <strong>${chore.name}</strong>
-                    <div class="meta ${status.className}">${status.label} · ${frequencyLabel(chore)}</div>
-                    <div class="meta">${lastDoneLabel(chore)}</div>
-                  </div>
-                  <div class="card-buttons">
-                    <button class="btn-primary" onclick="markChoreDone('${chore.id}')">Mark done</button>
-                    <button class="btn-text" onclick="startEditChore('${chore.id}')">Edit</button>
-                  </div>
-                </div>`;
-            })
-            .join("")}
-        </div>`;
-    })
-    .join("");
+        return `
+          <div class="room-group">
+            <h3 class="room-heading">${roomIcon(roomIconKey)}<span>${roomLabel}</span></h3>
+            ${groupChores.map(({ chore, due }) => renderChoreCard(chore, due, false)).join("")}
+          </div>`;
+      })
+      .join("");
+  } else {
+    const sorted = withDue.sort((a, b) => a.due - b.due);
+    listEl.innerHTML = sorted.map(({ chore, due }) => renderChoreCard(chore, due, true)).join("");
+  }
+}
+
+function renderChoreCard(chore, due, showRoomLabel) {
+  if (chore.id === editingChoreId) return renderChoreEditForm(chore);
+  const status = dueStatus(due);
+  const roomLabelHtml = showRoomLabel
+    ? `<div class="meta room-label">${chore.room_id ? roomName(chore.room_id) : "No room"}</div>`
+    : "";
+  return `
+    <div class="card ${status.className}">
+      <div class="card-info">
+        <strong>${chore.name}</strong>
+        ${roomLabelHtml}
+        <div class="meta ${status.className}">${status.label} · ${frequencyLabel(chore)}</div>
+        <div class="meta">${lastDoneLabel(chore)}</div>
+      </div>
+      <div class="card-buttons">
+        <button class="btn-primary" onclick="markChoreDone('${chore.id}')">Mark done</button>
+        <button class="btn-text" onclick="startEditChore('${chore.id}')">Edit</button>
+      </div>
+    </div>`;
 }
 
 function renderChoreEditForm(chore) {
