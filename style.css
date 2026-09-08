@@ -60,6 +60,46 @@ body {
   background: var(--color-surface);
 }
 
+#home-link {
+  cursor: pointer;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-overlay.hidden {
+  display: none;
+}
+
+.modal-box {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 20px;
+  width: 90%;
+  max-width: 400px;
+}
+
+.modal-box textarea {
+  width: 100%;
+  margin: 12px 0;
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  resize: vertical;
+}
+
 /* Tabs */
 .tabs {
   display: flex;

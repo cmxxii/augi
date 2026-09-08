@@ -25,12 +25,24 @@
   <!-- MAIN APP — hidden until logged in -->
   <div id="app" class="hidden">
     <header class="top-bar">
-      <h1>⌂ augi</h1>
+      <h1 id="home-link">⌂ augi</h1>
       <div class="who-am-i">
         <span id="logged-in-name"></span>
-        <button id="sign-out-btn" class="btn-text">Sign out</button>
+        <button id="show-feedback" class="btn-text">sos</button>
       </div>
     </header>
+
+    <div id="feedback-modal" class="modal-overlay hidden">
+      <div class="modal-box">
+        <h3>Send feedback</h3>
+        <textarea id="feedback-message" placeholder="Bug, idea, complaint — whatever's on your mind" rows="4" required></textarea>
+        <div class="form-buttons">
+          <button id="submit-feedback" class="btn-primary">Send</button>
+          <button id="cancel-feedback" class="btn-text">Cancel</button>
+        </div>
+      </div>
+    </div>
+    
 
     <nav class="tabs">
       <button class="tab-button active" data-tab="chores-tab">Chores</button>

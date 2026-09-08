@@ -147,10 +147,24 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
   // If successful, onAuthStateChange fires automatically and handles the rest
 });
 
-// Sign out button
-document.getElementById("sign-out-btn").addEventListener("click", async () => {
-  await db.auth.signOut();
-  // onAuthStateChange fires automatically and shows the login screen
+document.getElementById("show-feedback").addEventListener("click", () => {
+  document.getElementById("feedback-modal").classList.remove("hidden");
+});
+
+document.getElementById("cancel-feedback").addEventListener("click", () => {
+  document.getElementById("feedback-modal").classList.add("hidden");
+  document.getElementById("feedback-message").value = "";
+});
+
+document.getElementById("submit-feedback").addEventListener("click", async () => {
+  const message = document.getElementById("feedback-message").value.trim();
+  if (!message) return;
+  await db.from("feedback").insert({
+    message,
+    submitted_by: displayName(currentUser),
+  });
+  document.getElementById("feedback-message").value = "";
+  document.getElementById("feedback-modal").classList.add("hidden");
 });
 
 // ============================================================
@@ -185,6 +199,25 @@ document.querySelectorAll(".sort-btn").forEach((btn) => {
     loadChores();
   });
 });
+
+document.getElementById("home-link").addEventListener("click", () => {
+  document.querySelectorAll(".tab-button").forEach((b) => b.classList.remove("active"));
+  document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
+  document.querySelector('.tab-button[data-tab="chores-tab"]').classList.add("active");
+  document.getElementById("chores-tab").classList.add("active");
+
+  document.querySelectorAll(".subtab-button").forEach((b) => b.classList.remove("active"));
+  document.querySelectorAll(".subtab-panel").forEach((p) => p.classList.remove("active"));
+  document.querySelector('.subtab-button[data-subtab="chores-todo-subtab"]').classList.add("active");
+  document.getElementById("chores-todo-subtab").classList.add("active");
+
+  document.querySelectorAll(".sort-btn").forEach((b) => b.classList.remove("active"));
+  document.querySelector('.sort-btn[data-sort="priority"]').classList.add("active");
+  choreSortMode = "priority";
+  loadChores();
+});
+
+
 
 // ============================================================
 // SECTION 1: CHORES
