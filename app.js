@@ -90,21 +90,15 @@ async function loadHistory() {
 
 document.getElementById("history-room-filter").addEventListener("change", loadHistory);
 
-document.getElementById("toggle-chore-edit-mode").addEventListener("click", () => {
-  choreEditMode = !choreEditMode;
+document.getElementById("toggle-chore-edit-mode").addEventListener("change", (e) => {
+  choreEditMode = e.target.checked;
   editingChoreId = null;
-  const btn = document.getElementById("toggle-chore-edit-mode");
-  btn.textContent = choreEditMode ? "Edit mode: On" : "Edit mode: Off";
-  btn.classList.toggle("active", choreEditMode);
   loadChores();
 });
 
-document.getElementById("toggle-grocery-edit-mode").addEventListener("click", () => {
-  groceryEditMode = !groceryEditMode;
+document.getElementById("toggle-grocery-edit-mode").addEventListener("change", (e) => {
+  groceryEditMode = e.target.checked;
   editingGroceryId = null;
-  const btn = document.getElementById("toggle-grocery-edit-mode");
-  btn.textContent = groceryEditMode ? "Edit mode: On" : "Edit mode: Off";
-  btn.classList.toggle("active", groceryEditMode);
   loadGroceries();
 });
 
@@ -113,10 +107,8 @@ function resetEditModes() {
   groceryEditMode = false;
   editingChoreId = null;
   editingGroceryId = null;
-  document.getElementById("toggle-chore-edit-mode").textContent = "Edit mode: Off";
-  document.getElementById("toggle-chore-edit-mode").classList.remove("active");
-  document.getElementById("toggle-grocery-edit-mode").textContent = "Edit mode: Off";
-  document.getElementById("toggle-grocery-edit-mode").classList.remove("active");
+  document.getElementById("toggle-chore-edit-mode").checked = false;
+  document.getElementById("toggle-grocery-edit-mode").checked = false;
   loadChores();
   loadGroceries();
 }
