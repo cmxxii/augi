@@ -71,11 +71,12 @@ async function loadHistory() {
       const when = new Date(c.completed_at).toLocaleDateString();
       const who = displayNameCache[c.completed_by] || c.completed_by.split("@")[0];
       const choreName = c.chores?.name || "Unknown chore";
+      const roomIconKey = c.chores?.room_id ? (roomsCache.find((r) => r.id === c.chores.room_id)?.wip_icon || "") : "";
       const roomLabel = c.chores?.room_id ? roomName(c.chores.room_id) : "No room";
       return `
         <div class="card">
          <div class="card-info">
-            <div class="meta room-label">${roomLabel}</div>
+            <div class="meta room-label">${roomIcon(roomIconKey)} ${roomLabel}</div>
             <strong>${choreName}</strong>
             <div class="meta">${who} · ${when}</div>
           </div>
@@ -335,9 +336,12 @@ async function loadChores() {
 function renderChoreCard(chore, due, showRoomLabel) {
   if (chore.id === editingChoreId) return renderChoreEditForm(chore);
   const status = dueStatus(due);
-  const roomLabelHtml = showRoomLabel
-    ? `<div class="meta room-label">${chore.room_id ? roomName(chore.room_id) : "No room"}</div>`
-    : "";
+    let roomLabelHtml = "";
+  if (showRoomLabel) {
+    const roomIconKey = chore.room_id ? (roomsCache.find((r) => r.id === chore.room_id)?.wip_icon || "") : "";
+    const roomLabelText = chore.room_id ? roomName(chore.room_id) : "No room";
+    roomLabelHtml = `<div class="meta room-label">${roomIcon(roomIconKey)} ${roomLabelText}</div>`;
+  }
   return `
     <div class="card ${status.className}">
       <div class="card-info">
