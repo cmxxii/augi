@@ -29,15 +29,15 @@ function roomName(roomId) {
 
 function roomIcon(wip_icon) {
   const n = (wip_icon).toLowerCase();
-  if (n.includes("out")) return "🏡";
-  if (n.includes("car")) return "🚗";
-  if (n.includes("cook")) return "🍳";
-  if (n.includes("table")) return "🪑";
-  if (n.includes("couch")) return "🛋️";
-  if (n.includes("bath")) return "🚽";
-  if (n.includes("hall")) return "🧺";
-  if (n.includes("bed")) return "🛏️";
-  return "🚪"; // fallback for "No room" or any other custom room
+  if (n.includes("out")) return '<span class="material-symbols-outlined">garage_door</span>';
+  if (n.includes("car")) return '<span class="material-symbols-outlined">directions_car</span>';
+  if (n.includes("cook")) return '<span class="material-symbols-outlined">kitchen</span>';
+  if (n.includes("table")) return '<span class="material-symbols-outlined">table_restaurant</span>';
+  if (n.includes("couch")) return '<span class="material-symbols-outlined">chair</span>';
+  if (n.includes("bath")) return '<span class="material-symbols-outlined">faucet</span>';
+  if (n.includes("hall")) return '<span class="material-symbols-outlined">hallway</span>';
+  if (n.includes("bed")) return '<span class="material-symbols-outlined">bed</span>';
+  return '<span class="material-symbols-outlined">door_open</span>';
 }
 
 function renderRoomOptions() {
@@ -286,9 +286,9 @@ function dueStatus(dueDate) {
   const days = Math.round(
     (new Date(dueDate).setHours(0,0,0,0) - new Date().setHours(0,0,0,0)) / msPerDay
   );
-  if (days < 0) return { label: `Overdue by ${-days}d`, className: "due-overdue" };
+  if (days < 0) return { label: `Overdue by ${-days} days`, className: "due-overdue" };
   if (days >= 0 && days <= 2) return { label: "Due today", className: "due-today" };
-  return { label: `Due in ${days}d`, className: "due-later" };
+  return { label: `Due in ${days} days`, className: "due-later" };
 }
 
 function frequencyLabel(chore) {
@@ -305,7 +305,7 @@ function lastDoneLabel(chore) {
   if (!chore.last_completed_at) return "Never logged";
   const days = Math.round((new Date() - new Date(chore.last_completed_at)) / 86400000);
   if (days === 0) return "Last done today";
-  return `Last done ${days}d ago`;
+  return `Last done ${days} days ago`;
 }
 
 async function loadChores() {
@@ -389,41 +389,23 @@ function renderChoreEditForm(chore) {
     .map((r) => `<option value="${r.id}" ${r.id === chore.room_id ? "selected" : ""}>${r.name}</option>`)
     .join("");
 
-  const type = chore.frequency_type;
-  const weekdayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  const checkedDays = chore.frequency_weekdays || [];
-  const weekdayCheckboxes = weekdayNames
-    .map((label, i) => `<label><input type="checkbox" value="${i}" ${checkedDays.includes(i) ? "checked" : ""} /> ${label}</label>`)
-    .join("");
+  const isWeekly = chore.frequency_type === "weekly_on_days";
+  const frequencyFieldHtml = isWeekly
+    ? `<div id="freq-hint" class="meta">For chores assigned to specific weekdays (like trash day), edit 'frequency' directly in database.</div>`
+    : `<input type="number" id="edit-interval-days-${chore.id}" min="1" value="${chore.frequency_interval_days || ""}" placeholder="Repeat every N days" />`;
 
   return `
-    <div class="card add-form">
+    <div class="add-form">
       <input type="text" id="edit-name-${chore.id}" value="${chore.name}" />
       <select id="edit-room-${chore.id}">
-        <option value="">No room</option>
         ${roomOptions}
       </select>
-      <select id="edit-frequency-type-${chore.id}" onchange="toggleEditFrequencyFields('${chore.id}')">
-        <option value="interval_days" ${type === "interval_days" ? "selected" : ""}>Every # days</option>
-        <option value="weekly_on_days" ${type === "weekly_on_days" ? "selected" : ""}>On specific weekday(s)</option>
-      </select>
-      <input type="number" id="edit-interval-days-${chore.id}" min="1"
-        value="${chore.frequency_interval_days || ""}"
-        class="${type === "interval_days" ? "" : "hidden"}" />
-      <div id="edit-weekdays-${chore.id}" class="weekday-picker ${type === "weekly_on_days" ? "" : "hidden"}">
-        ${weekdayCheckboxes}
-      </div>
+      ${frequencyFieldHtml}
       <div class="form-buttons">
         <button class="btn-primary" onclick="saveEditChore('${chore.id}')">Save</button>
         <button class="btn-text" onclick="cancelEditChore()">Cancel</button>
       </div>
     </div>`;
-}
-
-function toggleEditFrequencyFields(choreId) {
-  const type = document.getElementById(`edit-frequency-type-${choreId}`).value;
-  document.getElementById(`edit-interval-days-${choreId}`).classList.toggle("hidden", type !== "interval_days");
-  document.getElementById(`edit-weekdays-${choreId}`).classList.toggle("hidden", type !== "weekly_on_days");
 }
 
 function startEditChore(choreId) {
@@ -437,18 +419,18 @@ function cancelEditChore() {
 }
 
 async function saveEditChore(choreId) {
-  const type = document.getElementById(`edit-frequency-type-${choreId}`).value;
+  const intervalInput = document.getElementById(`edit-interval-days-${choreId}`);
 
-  await db.from("chores").update({
+  const updates = {
     name: document.getElementById(`edit-name-${choreId}`).value,
     room_id: document.getElementById(`edit-room-${choreId}`).value || null,
-    frequency_type: type,
-    frequency_interval_days: type === "interval_days"
-      ? Number(document.getElementById(`edit-interval-days-${choreId}`).value) : null,
-    frequency_weekdays: type === "weekly_on_days"
-      ? [...document.querySelectorAll(`#edit-weekdays-${choreId} input:checked`)].map((cb) => Number(cb.value))
-      : null,
-  }).eq("id", choreId);
+  };
+
+  if (intervalInput) {
+    updates.frequency_interval_days = Number(intervalInput.value);
+  }
+
+  await db.from("chores").update(updates).eq("id", choreId);
 
   editingChoreId = null;
   loadChores();
@@ -470,25 +452,14 @@ const addChoreForm = document.getElementById("add-chore-form");
 document.getElementById("show-add-chore").addEventListener("click", () => addChoreForm.classList.remove("hidden"));
 document.getElementById("cancel-add-chore").addEventListener("click", () => addChoreForm.classList.add("hidden"));
 
-const frequencyTypeSelect = document.getElementById("chore-frequency-type");
-frequencyTypeSelect.addEventListener("change", () => {
-  const type = frequencyTypeSelect.value;
-  document.getElementById("chore-interval-days").classList.toggle("hidden", type !== "interval_days");
-  document.getElementById("chore-weekdays-picker").classList.toggle("hidden", type !== "weekly_on_days");
-});
-
 addChoreForm.addEventListener("submit", async (e) => {
   e.preventDefault();
-  const type = frequencyTypeSelect.value;
   await db.from("chores").insert({
     name: document.getElementById("chore-name").value,
     room_id: document.getElementById("chore-room").value || null,
-    frequency_type: type,
-    frequency_interval_days: type === "interval_days"
-      ? Number(document.getElementById("chore-interval-days").value) : null,
-    frequency_weekdays: type === "weekly_on_days"
-      ? [...document.querySelectorAll("#chore-weekdays-picker input:checked")].map((cb) => Number(cb.value))
-      : null,
+    frequency_type: "interval_days",
+    frequency_interval_days: Number(document.getElementById("chore-interval-days").value),
+    frequency_weekdays: null,
   });
   addChoreForm.reset();
   addChoreForm.classList.add("hidden");
@@ -563,7 +534,7 @@ async function loadGroceries() {
       <div class="card">
         <div class="card-info">
           <strong>${item.item_name}</strong>
-          <div class="meta">${item.note ? item.note + " · " : ""}requested by ${item.requested_by || "someone"}</div>
+          <div class="meta">${item.note ? item.note + " · " : ""}@ ${item.requested_by || "someone"}</div>
         </div>
         <div class="card-buttons">
           <button class="btn-secondary" onclick="markPurchased('${item.id}')">DONE</button>
@@ -586,7 +557,7 @@ async function loadGroceries() {
 
 function renderGroceryEditForm(item) {
   return `
-    <div class="card add-form">
+    <div class="add-form">
       <input type="text" id="edit-grocery-item-${item.id}" value="${item.item_name}" />
       <input type="text" id="edit-grocery-note-${item.id}" value="${item.note || ""}" placeholder="Note (optional)" />
       <div class="form-buttons">

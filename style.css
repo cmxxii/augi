@@ -1,12 +1,9 @@
 /* ============================================================
-   AUGUSTA STARTER — STYLES
-   Plain CSS, no build tools. Colors are defined once at the top
-   as variables, so you can re-theme the whole app by editing
-   the ":root" block below.
+   augi
    ============================================================ */
 
 :root {
-  --color-bg: #f2eef7;         /* thistle: light lavender background */
+  --color-bg: #e3dceb;         /* thistle: light lavender background */
   --color-surface: #ffffff;    /* card backgrounds */
   --color-border: #9c90ad;
   --color-text: #423c4b;
@@ -20,9 +17,15 @@
   --color-today: #404bca; 
   --color-today-bg: #404cca28; 
 
-  --color-ok: #75b9be; /* tropical teal */
+  --color-ok: #9c90ad;
   --color-stui: #ccbce1; /* aka STandard UI for things like toggle switch */
   --radius: 10px;
+}
+
+.material-symbols-outlined {
+  font-size: 20px;
+  vertical-align: middle;
+  baseline-shift: -11.5%rem;
 }
 
 * {
@@ -54,12 +57,10 @@ body {
 }
 
 .who-am-i {
-  font-family: "Playwrite US Modern", sans-serif;
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 0.9rem;
-  padding-bottom: 8px;
 }
 
 .who-am-i select {
@@ -101,7 +102,7 @@ body {
 .modal-box textarea {
   width: 100%;
   margin: 12px 0;
-  font-family: inherit;
+  font-family: "SN Pro", inherit;
   font-size: 1rem;
   padding: 8px;
   border-radius: 6px;
@@ -193,9 +194,14 @@ body {
 }
 
 .sort-toggle {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
   display: flex;
   gap: 8px;
   margin-bottom: 12px;
+  align-items: center;
 }
 
 .sort-btn {
@@ -299,8 +305,33 @@ body {
   transform: translateX(16px);
 }
 
+.filters {
+  padding-bottom: 8px;
+}
+
+#history-room-filter {
+  font-family: "SN Pro", inherit;
+  padding: 6px 28px 6px 6px;
+  border-color: var(--color-border);
+  border-radius: var(--radius);
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: var(--color-surface);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'><path d='M6 9l6 6 6-6'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 14px;
+}
+
 /* Forms */
+
+#freq-hint {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
 .add-form {
+  font-family: inherit, "SN Pro";
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -311,8 +342,20 @@ body {
   margin-bottom: 16px;
 }
 
+.add-form input::placeholder,
+.add-form textarea::placeholder {
+  color: var(--color-text-muted);
+}
+
+select {
+  font-family: "SN Pro", inherit;
+  color: var(--color-text);
+}
+
 .add-form input,
 .add-form select {
+  font-family: "SN Pro", inherit, sans-serif;
+  color: var(--color-text-muted);
   padding: 10px 12px;
   border-radius: var(--radius);
   border: 1px solid var(--color-border);
@@ -322,7 +365,7 @@ body {
 .weekday-picker {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   font-size: 0.85rem;
 }
 
@@ -389,6 +432,9 @@ body {
   border: 2px solid var(--color-today);
 }
 
+.card.due-later {
+  border: 2px solid var(--color-ok);
+}
 
 .status-buttons {
   display: flex;

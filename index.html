@@ -8,14 +8,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playwrite+US+Modern:wght@100..400&family=SN+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:ROND&icon_names=history,task_alt,event,edit_square,hourglass_empty,label_important,problem,add_circle,delete,home_storage,nest_multi_room,bed,chair,kitchen,table_restaurant,garage_door,household_supplies,hallway,faucet,stairs,shopping_basket&display=block" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:ROND&icon_names=dine_lamp,directions_car,assignment,sort,history,task_alt,event,edit_square,hourglass_empty,label_important,problem,add_circle,delete,door_open,home_storage,nest_multi_room,bed,chair,kitchen,table_restaurant,garage_door,household_supplies,hallway,faucet,stairs,shopping_basket&display=block" rel="stylesheet" />
 </head>
 <body>
 
   <!-- LOGIN SCREEN — shown when not logged in, hidden once you are -->
   <div id="login-screen">
     <div id="login-card">
-      <h1>⌂ augi</h1>
+      <h1>augi</h1>
       <p>Sign in to access household hub.</p>
 
       <form id="login-form">
@@ -30,7 +30,7 @@
   <!-- MAIN APP — hidden until logged in -->
   <div id="app" class="hidden">
     <header class="top-bar">
-      <h1 id="home-link">⌂ augi</h1>
+      <h1 id="home-link">augi</h1>
       <div class="who-am-i">
         <span id="logged-in-name"></span>
         <button id="show-feedback" class="btn-text">sos</button>
@@ -73,22 +73,7 @@
         <select id="chore-room">
           <option value="">No room</option>
         </select>
-        <select id="chore-frequency-type">
-          <option value="interval_days">Every # days</option>
-          <option value="weekly_on_days">On specific weekday(s)</option>
-          <!-- <option value="monthly_on_day">On a day of the month</option> -->
-        </select>
-        <input type="number" id="chore-interval-days" placeholder="Every how many days? (e.g. 7)" min="1" />
-        <div id="chore-weekdays-picker" class="weekday-picker hidden">
-          <label><input type="checkbox" value="0" /> Mon</label>
-          <label><input type="checkbox" value="1" /> Tue</label>
-          <label><input type="checkbox" value="2" /> Wed</label>
-          <label><input type="checkbox" value="3" /> Thu</label>
-          <label><input type="checkbox" value="4" /> Fri</label>
-          <label><input type="checkbox" value="5" /> Sat</label>
-          <label><input type="checkbox" value="6" /> Sun</label>
-        </div>
-        <!-- <input type="number" id="chore-day-of-month" placeholder="Day of month (1-31)" min="1" max="31" class="hidden" /> -->
+        <input type="number" id="chore-interval-days" placeholder="Frequency in days (e.g. enter 7 for once-a-week)" min="1" />
         <div class="form-buttons">
           <button type="submit" class="btn-primary">Save chore</button>
           <button type="button" id="cancel-add-chore" class="btn-text">Cancel</button>
@@ -100,9 +85,9 @@
       </div>
 
       <div id="chores-todo-subtab" class="subtab-panel active">
-        <div class="sort-toggle">
+        <div class="sort-toggle">Sort by: 
           <button class="sort-btn active" data-sort="priority">Priority</button>
-          <button class="sort-btn" data-sort="room">By Room</button>
+          <button class="sort-btn" data-sort="room">Room</button>
         </div>
         <div id="chores-list" class="list"></div>
       </div>
