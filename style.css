@@ -6,16 +6,22 @@
    ============================================================ */
 
 :root {
-  --color-bg: #decdf5;         /* thistle: light lavender background */
+  --color-bg: #f2eef7;         /* thistle: light lavender background */
   --color-surface: #ffffff;    /* card backgrounds */
   --color-border: #9c90ad;
-  --color-text: #2b2620;
-  --color-text-muted: #7a7267;
+  --color-text: #423c4b;
+  --color-text-muted: #9c90ad;
   --color-accent: #404bca;     /* used for buttons/highlights */
   --color-accent-hover: #29339b; /* egyptian blue */
+
   --color-overdue: #eb4b98; /* dragonfruit */
-  --color-today: #f2f230; /* canary yellow */
+  --color-overdue-bg: #eb4b9820; /* dragonfruit faded */
+
+  --color-today: #404bca; 
+  --color-today-bg: #404cca28; 
+
   --color-ok: #75b9be; /* tropical teal */
+  --color-stui: #ccbce1; /* aka STandard UI for things like toggle switch */
   --radius: 10px;
 }
 
@@ -25,7 +31,7 @@
 
 body {
   margin: 0;
-  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: "SN Pro", -apple-system, "Segoe UI", Roboto, sans-serif;
   background: var(--color-bg);
   color: var(--color-text);
   padding-bottom: 40px;
@@ -42,15 +48,18 @@ body {
 }
 
 .top-bar h1 {
+  font-family: "Playwrite US Modern", sans-serif;
   font-size: 1.25rem;
   margin: 0;
 }
 
 .who-am-i {
+  font-family: "Playwrite US Modern", sans-serif;
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 0.9rem;
+  padding-bottom: 8px;
 }
 
 .who-am-i select {
@@ -109,6 +118,7 @@ body {
 }
 
 .tab-button {
+  font-family: "SN Pro";
   padding: 10px 16px;
   border: none;
   background: none;
@@ -125,6 +135,7 @@ body {
 }
 
 .tab-panel {
+  font-family: "SN Pro";
   display: none;
   padding: 20px;
   max-width: 700px;
@@ -136,6 +147,7 @@ body {
 }
 
 .panel-header {
+  font-family: "SN Pro";
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -148,6 +160,7 @@ body {
 }
 
 .subtab-nav {
+  font-family: "SN Pro";
   display: flex;
   gap: 4px;
   margin-bottom: 16px;
@@ -155,6 +168,7 @@ body {
 }
 
 .subtab-button {
+  font-family: "SN Pro";
   padding: 8px 14px;
   border: none;
   background: none;
@@ -185,8 +199,9 @@ body {
 }
 
 .sort-btn {
+  font-family: "SN Pro";
   padding: 6px 12px;
-  border: 1px solid #e5e5e5;
+  border: 1px solid #ccbce1;
   border-radius: 6px;
   background: none;
   font-size: 0.85rem;
@@ -204,6 +219,7 @@ body {
 .btn-primary,
 .btn-secondary,
 .btn-text {
+  font-family: "SN Pro";
   border: none;
   border-radius: var(--radius);
   padding: 10px 16px;
@@ -257,7 +273,7 @@ body {
   position: relative;
   width: 36px;
   height: 20px;
-  background: #ccc;
+  background: var(--color-stui);
   border-radius: 999px;
   transition: background 0.2s;
   flex-shrink: 0;
@@ -287,7 +303,7 @@ body {
 .add-form {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
@@ -306,13 +322,13 @@ body {
 .weekday-picker {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
   font-size: 0.85rem;
 }
 
 .form-buttons {
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
 
 .hidden {
@@ -323,7 +339,7 @@ body {
 .list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .card {
@@ -351,9 +367,28 @@ body {
   letter-spacing: 0.04em;
 }
 
-.due-overdue { color: var(--color-overdue); font-weight: 600; }
-.due-today { color: var(--color-today); font-weight: 600; }
-.due-later { color: var(--color-text-muted); }
+.meta.due-overdue { 
+  color: var(--color-overdue); 
+  font-weight: 600; 
+}
+.meta.due-today { 
+  color: var(--color-today);
+  font-weight: 600; 
+}
+.meta.due-later { 
+  color: var(--color-text-muted); 
+}
+
+.card.due-overdue {
+  background-color: var(--color-overdue-bg);
+  border: 2px solid var(--color-overdue);
+}
+
+.card.due-today {
+  background-color: var(--color-today-bg);
+  border: 2px solid var(--color-today);
+}
+
 
 .status-buttons {
   display: flex;
@@ -447,6 +482,9 @@ body {
 }
 
 .room-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   margin-bottom: 24px;
 }
 

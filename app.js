@@ -287,7 +287,7 @@ function dueStatus(dueDate) {
     (new Date(dueDate).setHours(0,0,0,0) - new Date().setHours(0,0,0,0)) / msPerDay
   );
   if (days < 0) return { label: `Overdue by ${-days}d`, className: "due-overdue" };
-  if (days === 0) return { label: "Due today", className: "due-today" };
+  if (days >= 0 && days <= 2) return { label: "Due today", className: "due-today" };
   return { label: `Due in ${days}d`, className: "due-later" };
 }
 
