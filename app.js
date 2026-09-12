@@ -438,10 +438,10 @@ async function saveEditChore(choreId) {
 
 async function markChoreDone(choreId) {
   const now = new Date().toISOString();
-  // Records who did it using the real logged-in user's email
+  // Records who did it using their display name
   await db.from("chore_completions").insert({
     chore_id: choreId,
-    completed_by: currentUser.email,
+    completed_by: displayName(currentUser),
   });
   await db.from("chores").update({ last_completed_at: now }).eq("id", choreId);
   loadChores();
