@@ -179,6 +179,9 @@ body {
 }
 
 .subtab-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   padding: 8px 14px;
   border: none;
   background: none;
@@ -208,12 +211,22 @@ body {
   letter-spacing: 0.04em;
   color: var(--color-text-muted);
   display: flex;
+  justify-content: space-between;
   gap: 8px;
   margin-bottom: 12px;
   align-items: center;
 }
 
-.sort-btn {
+.sort-toggle-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.sort-btn,
+.history-sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   padding: 6px 12px;
   border: 1px solid #ccbce1;
   border-radius: 6px;
@@ -223,7 +236,8 @@ body {
   cursor: pointer;
 }
 
-.sort-btn.active {
+.sort-btn.active,
+.history-sort-btn.active {
   background: var(--color-accent);
   color: white;
   border-color: var(--color-accent);
@@ -365,6 +379,22 @@ select {
   font-size: 0.95rem;
 }
 
+.field-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.field-with-icon .field-icon {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.field-with-icon input,
+.field-with-icon select {
+  flex: 1;
+}
+
 .weekday-picker {
   display: flex;
   flex-wrap: wrap;
@@ -413,6 +443,10 @@ select {
   letter-spacing: 0.04em;
 }
 
+.room-card {
+  cursor: pointer;
+}
+
 .meta.due-overdue { 
   color: var(--color-overdue); 
   font-weight: 600; 
@@ -437,6 +471,14 @@ select {
 
 .card.due-later {
   border: 2px solid var(--color-ok);
+}
+
+.card.add-chore-card {
+  justify-content: center;
+  cursor: pointer;
+  border: 2px dashed var(--color-accent);
+  color: var(--color-accent);
+  font-weight: 600;
 }
 
 .status-buttons {

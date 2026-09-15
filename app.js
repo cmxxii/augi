@@ -11,7 +11,7 @@ let editingChoreId = null;
 
 let editingGroceryId = null;
 
-let choreEditMode = false;
+let choreManageMode = false;
 let groceryEditMode = false;
 
 // Room selection dropdown
@@ -49,12 +49,6 @@ function renderRoomOptions() {
   select.value = current;
 }
 
-function populateHistoryFilters() {
-  const roomSelect = document.getElementById("history-room-filter");
-  roomSelect.innerHTML = `<option value="">All rooms</option>` +
-    roomsCache.map((r) => `<option value="${r.id}">${r.name}</option>`).join("");
-}
-
 async function loadHistory() {
   const { data: completions, error } = await db
     .from("chore_completions")
@@ -62,37 +56,83 @@ async function loadHistory() {
     .order("completed_at", { ascending: false });
   if (error) { console.error(error); return; }
 
-  const roomFilter = document.getElementById("history-room-filter").value;
+  const listEl = document.getElementById("history-list");
+  const roomsBtn = document.querySelector('#chores-history-subtab .history-sort-btn[data-sort="room"]');
+  const allTasksBtn = document.querySelector('#chores-history-subtab .history-sort-btn[data-sort="priority"]');
 
-  const filtered = completions.filter((c) => {
-    if (roomFilter && c.chores?.room_id !== roomFilter) return false;
-    return true;
+  const groups = {};
+  completions.forEach((c) => {
+    const key = c.chores?.room_id || "none";
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(c);
   });
 
-  document.getElementById("history-list").innerHTML = filtered
-    .map((c) => {
-      const when = new Date(c.completed_at).toLocaleDateString();
-      const who = displayNameCache[c.completed_by] || c.completed_by.split("@")[0];
-      const choreName = c.chores?.name || "Unknown chore";
+  const inRoom = historySortMode === "room" && roomFilter &&
+    (roomFilter === "none" ? (groups["none"]?.length > 0) : roomsCache.some((r) => r.id === roomFilter));
+
+  if (inRoom) {
+    roomsBtn.innerHTML = '<span class="material-symbols-outlined">arrow_back</span> Rooms';
+    roomsBtn.classList.remove("active");
+    allTasksBtn.classList.remove("active");
+  } else {
+    roomsBtn.innerHTML = "Rooms";
+    roomsBtn.classList.toggle("active", historySortMode === "room");
+    allTasksBtn.classList.toggle("active", historySortMode === "priority");
+  }
+
+  const renderEntry = (c, showRoomLabel) => {
+    const when = new Date(c.completed_at).toLocaleDateString();
+    const who = displayNameCache[c.completed_by] || c.completed_by.split("@")[0];
+    const choreName = c.chores?.name || "Unknown chore";
+    let roomLabelHtml = "";
+    if (showRoomLabel) {
       const roomIconKey = c.chores?.room_id ? (roomsCache.find((r) => r.id === c.chores.room_id)?.wip_icon || "") : "";
-      const roomLabel = c.chores?.room_id ? roomName(c.chores.room_id) : "No room";
-      return `
-        <div class="card">
-         <div class="card-info">
-            <div class="meta room-label">${roomIcon(roomIconKey)} ${roomLabel}</div>
-            <strong>${choreName}</strong>
-            <div class="meta">${who} · ${when}</div>
-          </div>
-        </div>`;
-    })
-    .join("") || "<p>No history yet.</p>";
+      const roomLabelText = c.chores?.room_id ? roomName(c.chores.room_id) : "No room";
+      roomLabelHtml = `<div class="meta room-label">${roomIcon(roomIconKey)} ${roomLabelText}</div>`;
+    }
+    return `
+      <div class="card">
+        <div class="card-info">
+          ${roomLabelHtml}
+          <strong>${choreName}</strong>
+          <div class="meta">${who} · ${when}</div>
+        </div>
+      </div>`;
+  };
+
+  if (historySortMode === "room") {
+    if (inRoom) {
+      const roomLabel = roomFilter === "none" ? "No room" : roomName(roomFilter);
+      const roomIconKey = roomFilter === "none" ? "" : (roomsCache.find((r) => r.id === roomFilter)?.wip_icon || "");
+
+      listEl.innerHTML = `
+        <h3 class="room-heading">${roomIcon(roomIconKey)}<span>${roomLabel}</span></h3>
+        ${(groups[roomFilter] || []).map((c) => renderEntry(c, false)).join("") || "<p>No history in this room yet.</p>"}`;
+    } else {
+      const roomCards = roomsCache.map((r) => ({ key: r.id, name: r.name, wip_icon: r.wip_icon, entries: groups[r.id] || [] }));
+      if (groups["none"]?.length) {
+        roomCards.push({ key: "none", name: "No room", wip_icon: "", entries: groups["none"] });
+      }
+
+      listEl.innerHTML = roomCards
+        .map(({ key, name, wip_icon, entries }) => `
+          <div class="card room-card" onclick="filterByRoom('${key}')">
+            <div class="card-info">
+              <strong>${roomIcon(wip_icon)} ${name}</strong>
+              <div class="meta">${entries.length} completed</div>
+            </div>
+          </div>`)
+        .join("");
+    }
+  } else {
+    listEl.innerHTML = completions.map((c) => renderEntry(c, true)).join("") || "<p>No history yet.</p>";
+  }
 }
 
-document.getElementById("history-room-filter").addEventListener("change", loadHistory);
-
-document.getElementById("toggle-chore-edit-mode").addEventListener("change", (e) => {
-  choreEditMode = e.target.checked;
+document.getElementById("toggle-chore-manage-mode").addEventListener("change", (e) => {
+  choreManageMode = e.target.checked;
   editingChoreId = null;
+  if (!choreManageMode) addChoreForm.classList.add("hidden");
   loadChores();
 });
 
@@ -103,12 +143,13 @@ document.getElementById("toggle-grocery-edit-mode").addEventListener("change", (
 });
 
 function resetEditModes() {
-  choreEditMode = false;
+  choreManageMode = false;
   groceryEditMode = false;
   editingChoreId = null;
   editingGroceryId = null;
-  document.getElementById("toggle-chore-edit-mode").checked = false;
+  document.getElementById("toggle-chore-manage-mode").checked = false;
   document.getElementById("toggle-grocery-edit-mode").checked = false;
+  addChoreForm.classList.add("hidden");
   loadChores();
   loadGroceries();
 }
@@ -147,7 +188,6 @@ db.auth.onAuthStateChange(async (_event, session) => {
   loadChores();
   loadInventory();
   loadGroceries();
-  populateHistoryFilters();
   loadHistory();
 } else {
     // Not logged in — show the login screen
@@ -214,17 +254,29 @@ document.querySelectorAll(".subtab-button").forEach((btn) => {
     document.querySelectorAll(".subtab-panel").forEach((p) => p.classList.remove("active"));
     btn.classList.add("active");
     document.getElementById(btn.dataset.subtab).classList.add("active");
+
+    if (btn.dataset.subtab === "chores-todo-subtab") loadChores();
+    if (btn.dataset.subtab === "chores-history-subtab") loadHistory();
   });
 });
 
-let choreSortMode = "priority";
+let choreSortMode = "room";
+let historySortMode = "room";
+let roomFilter = null; // shared between Tasks and History so picking a room in one keeps it selected in the other
 
 document.querySelectorAll(".sort-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
-    document.querySelectorAll(".sort-btn").forEach((b) => b.classList.remove("active"));
-    btn.classList.add("active");
     choreSortMode = btn.dataset.sort;
+    roomFilter = null;
     loadChores();
+  });
+});
+
+document.querySelectorAll(".history-sort-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    historySortMode = btn.dataset.sort;
+    roomFilter = null;
+    loadHistory();
   });
 });
 
@@ -240,8 +292,14 @@ document.getElementById("home-link").addEventListener("click", () => {
   document.getElementById("chores-todo-subtab").classList.add("active");
 
   document.querySelectorAll(".sort-btn").forEach((b) => b.classList.remove("active"));
-  document.querySelector('.sort-btn[data-sort="priority"]').classList.add("active");
-  choreSortMode = "priority";
+  document.querySelector('.sort-btn[data-sort="room"]').classList.add("active");
+  choreSortMode = "room";
+
+  document.querySelectorAll(".history-sort-btn").forEach((b) => b.classList.remove("active"));
+  document.querySelector('.history-sort-btn[data-sort="room"]').classList.add("active");
+  historySortMode = "room";
+
+  roomFilter = null;
   resetEditModes();
 });
 
@@ -318,46 +376,110 @@ async function loadChores() {
   }
 
   const listEl = document.getElementById("chores-list");
-  if (chores.length === 0) {
-    listEl.innerHTML = "<p>No chores yet — add your first one above.</p>";
-    return;
-  }
-
+  const headerButtons = document.querySelector("#chores-todo-subtab .header-buttons");
+  const roomsBtn = document.querySelector('#chores-todo-subtab .sort-btn[data-sort="room"]');
+  const allTasksBtn = document.querySelector('#chores-todo-subtab .sort-btn[data-sort="priority"]');
   const withDue = chores.map((c) => ({ chore: c, due: nextDueDate(c) }));
 
-  if (choreSortMode === "room") {
-    const groups = {};
-    withDue.forEach(({ chore, due }) => {
-      const key = chore.room_id || "none";
-      if (!groups[key]) groups[key] = [];
-      groups[key].push({ chore, due });
-    });
+  const groups = {};
+  withDue.forEach(({ chore, due }) => {
+    const key = chore.room_id || "none";
+    if (!groups[key]) groups[key] = [];
+    groups[key].push({ chore, due });
+  });
 
-    const roomKeys = Object.keys(groups).sort((a, b) => {
-      if (a === "none") return 1;
-      if (b === "none") return -1;
-      const roomA = roomsCache.find((r) => r.id === a);
-      const roomB = roomsCache.find((r) => r.id === b);
-      return (roomA?.sorting || "").localeCompare(roomB?.sorting || "");
-    });
+  const inRoom = choreSortMode === "room" && roomFilter &&
+    (roomFilter === "none" ? (groups["none"]?.length > 0) : roomsCache.some((r) => r.id === roomFilter));
 
-    listEl.innerHTML = roomKeys
-      .map((key) => {
-        const groupChores = groups[key].sort((a, b) => a.due - b.due);
-        const roomLabel = key === "none" ? "No room" : roomName(key);
-        const roomIconKey = key === "none" ? "" : (roomsCache.find((r) => r.id === key)?.wip_icon || "");
-
-        return `
-          <div class="room-group">
-            <h3 class="room-heading">${roomIcon(roomIconKey)}<span>${roomLabel}</span></h3>
-            ${groupChores.map(({ chore, due }) => renderChoreCard(chore, due, false)).join("")}
-          </div>`;
-      })
-      .join("");
+  if (inRoom) {
+    roomsBtn.innerHTML = '<span class="material-symbols-outlined">arrow_back</span> Rooms';
+    roomsBtn.classList.remove("active");
+    allTasksBtn.classList.remove("active");
   } else {
-    const sorted = withDue.sort((a, b) => a.due - b.due);
-    listEl.innerHTML = sorted.map(({ chore, due }) => renderChoreCard(chore, due, true)).join("");
+    roomsBtn.innerHTML = "Rooms";
+    roomsBtn.classList.toggle("active", choreSortMode === "room");
+    allTasksBtn.classList.toggle("active", choreSortMode === "priority");
   }
+
+  if (choreSortMode === "room") {
+    if (inRoom) {
+      headerButtons.classList.remove("hidden");
+      const groupChores = (groups[roomFilter] || []).sort((a, b) => a.due - b.due);
+      const roomLabel = roomFilter === "none" ? "No room" : roomName(roomFilter);
+      const roomIconKey = roomFilter === "none" ? "" : (roomsCache.find((r) => r.id === roomFilter)?.wip_icon || "");
+
+      const addCardHtml = choreManageMode
+        ? `<div class="card add-chore-card" onclick="openAddChoreForm()">+ Add chore</div>`
+        : "";
+
+      listEl.innerHTML = `
+        <h3 class="room-heading">${roomIcon(roomIconKey)}<span>${roomLabel}</span></h3>
+        ${addCardHtml}
+        ${groupChores.map(({ chore, due }) => renderChoreCard(chore, due, false)).join("") || (choreManageMode ? "" : "<p>No chores in this room yet.</p>")}`;
+    } else {
+      headerButtons.classList.add("hidden");
+      if (choreManageMode) {
+        choreManageMode = false;
+        document.getElementById("toggle-chore-manage-mode").checked = false;
+        addChoreForm.classList.add("hidden");
+      }
+
+      const roomCards = roomsCache.map((r) => ({ key: r.id, name: r.name, wip_icon: r.wip_icon, entries: groups[r.id] || [] }));
+      if (groups["none"]?.length) {
+        roomCards.push({ key: "none", name: "No room", wip_icon: "", entries: groups["none"] });
+      }
+
+      listEl.innerHTML = roomCards
+        .map(({ key, name, wip_icon, entries }) => {
+          const overdueCount = entries.filter(({ due }) => dueStatus(due).className === "due-overdue").length;
+          const todayCount = entries.filter(({ due }) => dueStatus(due).className === "due-today").length;
+
+          const statsHtml = `${entries.length} task${entries.length === 1 ? "" : "s"}` +
+            (overdueCount > 0 ? ` · <span class="meta due-overdue">${overdueCount} overdue</span>` : "") +
+            (todayCount > 0 ? ` · <span class="meta due-today">${todayCount} due today</span>` : "");
+
+          return `
+            <div class="card room-card" onclick="filterByRoom('${key}')">
+              <div class="card-info">
+                <strong>${roomIcon(wip_icon)} ${name}</strong>
+                <div class="meta">${statsHtml}</div>
+              </div>
+            </div>`;
+        })
+        .join("");
+    }
+  } else {
+    headerButtons.classList.add("hidden");
+    if (choreManageMode) {
+      choreManageMode = false;
+      document.getElementById("toggle-chore-manage-mode").checked = false;
+      addChoreForm.classList.add("hidden");
+    }
+    const sorted = withDue.sort((a, b) => a.due - b.due);
+    listEl.innerHTML = sorted.map(({ chore, due }) => renderChoreCard(chore, due, true)).join("") || "<p>No chores yet.</p>";
+  }
+}
+
+function filterByRoom(key) {
+  roomFilter = key;
+  loadChores();
+  loadHistory();
+}
+
+function backToRooms() {
+  roomFilter = null;
+  loadChores();
+  loadHistory();
+}
+
+function filterChoresByRoom(key) {
+  choresRoomFilter = key;
+  loadChores();
+}
+
+function backToRoomCards() {
+  choresRoomFilter = null;
+  loadChores();
 }
 
 function renderChoreCard(chore, due, showRoomLabel) {
@@ -378,8 +500,8 @@ function renderChoreCard(chore, due, showRoomLabel) {
         <div class="meta last-done-label">${lastDoneLabel(chore)}</div>
       </div>
       <div class="card-buttons">
-        <button class="btn-primary" onclick="markChoreDone('${chore.id}')">DONE</button>
-        ${choreEditMode ? `<button class="btn-text" onclick="startEditChore('${chore.id}')">Edit</button>` : ""}
+        ${choreManageMode ? "" : `<button class="btn-primary" onclick="markChoreDone('${chore.id}')">DONE</button>`}
+                ${choreManageMode ? `<button class="btn-text" onclick="startEditChore('${chore.id}')">Edit</button>` : ""}
       </div>
     </div>`;
 }
@@ -449,8 +571,12 @@ async function markChoreDone(choreId) {
 
 // Add chore form
 const addChoreForm = document.getElementById("add-chore-form");
-document.getElementById("show-add-chore").addEventListener("click", () => addChoreForm.classList.remove("hidden"));
 document.getElementById("cancel-add-chore").addEventListener("click", () => addChoreForm.classList.add("hidden"));
+
+function openAddChoreForm() {
+  document.getElementById("chore-room").value = roomFilter && roomFilter !== "none" ? roomFilter : "";
+  addChoreForm.classList.remove("hidden");
+}
 
 addChoreForm.addEventListener("submit", async (e) => {
   e.preventDefault();
