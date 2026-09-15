@@ -223,7 +223,8 @@ body {
 }
 
 .sort-btn,
-.history-sort-btn {
+.history-sort-btn,
+.supplies-sort-btn {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -237,7 +238,8 @@ body {
 }
 
 .sort-btn.active,
-.history-sort-btn.active {
+.history-sort-btn.active,
+.supplies-sort-btn.active {
   background: var(--color-accent);
   color: white;
   border-color: var(--color-accent);

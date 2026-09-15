@@ -13,6 +13,8 @@ let editingGroceryId = null;
 
 let choreManageMode = false;
 let groceryEditMode = false;
+let supplyManageMode = false;
+let editingItemId = null;
 
 // Room selection dropdown
 let roomsCache = []; // [{id, name}]
@@ -41,12 +43,15 @@ function roomIcon(wip_icon) {
 }
 
 function renderRoomOptions() {
-  const select = document.getElementById("chore-room");
-  const current = select.value;
-  select.innerHTML =
-    `<option value="">No room</option>` +
-    roomsCache.map((r) => `<option value="${r.id}">${r.name}</option>`).join("");
-  select.value = current;
+  ["chore-room", "item-room"].forEach((id) => {
+    const select = document.getElementById(id);
+    if (!select) return;
+    const current = select.value;
+    select.innerHTML =
+      `<option value="">No room</option>` +
+      roomsCache.map((r) => `<option value="${r.id}">${r.name}</option>`).join("");
+    select.value = current;
+  });
 }
 
 async function loadHistory() {
@@ -142,16 +147,28 @@ document.getElementById("toggle-grocery-edit-mode").addEventListener("change", (
   loadGroceries();
 });
 
+document.getElementById("toggle-supply-manage-mode").addEventListener("change", (e) => {
+  supplyManageMode = e.target.checked;
+  editingItemId = null;
+  if (!supplyManageMode) addItemForm.classList.add("hidden");
+  loadInventory();
+});
+
 function resetEditModes() {
   choreManageMode = false;
   groceryEditMode = false;
+  supplyManageMode = false;
   editingChoreId = null;
   editingGroceryId = null;
+  editingItemId = null;
   document.getElementById("toggle-chore-manage-mode").checked = false;
   document.getElementById("toggle-grocery-edit-mode").checked = false;
+  document.getElementById("toggle-supply-manage-mode").checked = false;
   addChoreForm.classList.add("hidden");
+  addItemForm.classList.add("hidden");
   loadChores();
   loadGroceries();
+  loadInventory();
 }
 
 // Cache of email → display name, loaded once after login
@@ -257,27 +274,20 @@ document.querySelectorAll(".subtab-button").forEach((btn) => {
 
     if (btn.dataset.subtab === "chores-todo-subtab") loadChores();
     if (btn.dataset.subtab === "chores-history-subtab") loadHistory();
+    if (btn.dataset.subtab === "chores-supplies-subtab") loadInventory();
   });
 });
 
 let viewMode = "room"; // shared between Tasks and History — Rooms/All Tasks acts as one universal toggle
 let roomFilter = null; // shared between Tasks and History so picking a room in one keeps it selected in the other
 
-document.querySelectorAll(".sort-btn").forEach((btn) => {
+document.querySelectorAll(".sort-btn, .history-sort-btn, .supplies-sort-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
     viewMode = btn.dataset.sort;
     roomFilter = null;
     loadChores();
     loadHistory();
-  });
-});
-
-document.querySelectorAll(".history-sort-btn").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    viewMode = btn.dataset.sort;
-    roomFilter = null;
-    loadChores();
-    loadHistory();
+    loadInventory();
   });
 });
 
@@ -414,7 +424,7 @@ async function loadChores() {
       listEl.innerHTML = `
         <h3 class="room-heading">${roomIcon(roomIconKey)}<span>${roomLabel}</span></h3>
         ${addCardHtml}
-        ${groupChores.map(({ chore, due }) => renderChoreCard(chore, due, false)).join("") || (choreManageMode ? "" : "<p>No chores in this room yet.</p>")}`;
+        ${groupChores.map(({ chore, due }) => renderChoreCard(chore, due, false)).join("") || (choreManageMode ? "" : "<p>No chores in this room yet. Use <i>Manage</i> toggle above to add a chore.</p>")}`;
     } else {
       headerButtons.classList.add("hidden");
       if (choreManageMode) {
@@ -463,12 +473,14 @@ function filterByRoom(key) {
   roomFilter = key;
   loadChores();
   loadHistory();
+  loadInventory();
 }
 
 function backToRooms() {
   roomFilter = null;
   loadChores();
   loadHistory();
+  loadInventory();
 }
 
 function filterChoresByRoom(key) {
@@ -599,8 +611,34 @@ async function loadInventory() {
   const { data: items, error } = await db.from("inventory_items").select("*").order("category");
   if (error) { console.error(error); return; }
 
-  document.getElementById("inventory-list").innerHTML = items
-    .map((item) => `
+  const listEl = document.getElementById("inventory-list");
+  const headerButtons = document.querySelector("#chores-supplies-subtab .header-buttons");
+  const roomsBtn = document.querySelector('#chores-supplies-subtab .supplies-sort-btn[data-sort="room"]');
+  const allBtn = document.querySelector('#chores-supplies-subtab .supplies-sort-btn[data-sort="priority"]');
+
+  const groups = {};
+  items.forEach((item) => {
+    const key = item.room_id || "none";
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(item);
+  });
+
+  const inRoom = viewMode === "room" && roomFilter &&
+    (roomFilter === "none" ? (groups["none"]?.length > 0) : roomsCache.some((r) => r.id === roomFilter));
+
+  if (inRoom) {
+    roomsBtn.innerHTML = '<span class="material-symbols-outlined">arrow_back</span> Rooms';
+    roomsBtn.classList.remove("active");
+    allBtn.classList.remove("active");
+  } else {
+    roomsBtn.innerHTML = "Rooms";
+    roomsBtn.classList.toggle("active", viewMode === "room");
+    allBtn.classList.toggle("active", viewMode === "priority");
+  }
+
+  const renderItem = (item) => {
+    if (item.id === editingItemId) return renderItemEditForm(item);
+    return `
       <div class="card">
         <div class="card-info">
           <strong>${item.name}${item.category ? ` <span class="meta">(${item.category})</span>` : ""}</strong>
@@ -609,13 +647,62 @@ async function loadInventory() {
             : "Not restocked yet"}</div>
         </div>
         <div class="status-buttons">
-          ${["ok","low","out"].map((s) => `
-            <button class="status-btn status-${s} ${item.status === s ? "selected" : ""}"
-              onclick="setInventoryStatus('${item.id}', '${s}')">${s.toUpperCase()}</button>
-          `).join("")}
+          ${supplyManageMode
+            ? `<button class="btn-text" onclick="startEditItem('${item.id}')">Edit</button>`
+            : ["ok","low","out"].map((s) => `
+                <button class="status-btn status-${s} ${item.status === s ? "selected" : ""}"
+                  onclick="setInventoryStatus('${item.id}', '${s}')">${s.toUpperCase()}</button>
+              `).join("")}
         </div>
-      </div>`)
-    .join("") || "<p>No items yet — add your first one above.</p>";
+      </div>`;
+  };
+
+  if (viewMode === "room") {
+    if (inRoom) {
+      headerButtons.classList.remove("hidden");
+      const roomLabel = roomFilter === "none" ? "No room" : roomName(roomFilter);
+      const roomIconKey = roomFilter === "none" ? "" : (roomsCache.find((r) => r.id === roomFilter)?.wip_icon || "");
+
+      const addCardHtml = supplyManageMode
+        ? `<div class="card add-chore-card" onclick="openAddItemForm()">+ Add item</div>`
+        : "";
+
+      listEl.innerHTML = `
+        <h3 class="room-heading">${roomIcon(roomIconKey)}<span>${roomLabel}</span></h3>
+        ${addCardHtml}
+        ${(groups[roomFilter] || []).map(renderItem).join("") || (supplyManageMode ? "" : "<p>No items in this room yet. Use <i>Manage</i> toggle above to add items.</p>")}`;
+    } else {
+      headerButtons.classList.add("hidden");
+      if (supplyManageMode) {
+        supplyManageMode = false;
+        document.getElementById("toggle-supply-manage-mode").checked = false;
+        addItemForm.classList.add("hidden");
+      }
+
+      const roomCards = roomsCache.map((r) => ({ key: r.id, name: r.name, wip_icon: r.wip_icon, entries: groups[r.id] || [] }));
+      if (groups["none"]?.length) {
+        roomCards.push({ key: "none", name: "No room", wip_icon: "", entries: groups["none"] });
+      }
+
+      listEl.innerHTML = roomCards
+        .map(({ key, name, wip_icon, entries }) => `
+          <div class="card room-card" onclick="filterByRoom('${key}')">
+            <div class="card-info">
+              <strong>${roomIcon(wip_icon)} ${name}</strong>
+              <div class="meta">${entries.length} item${entries.length === 1 ? "" : "s"}</div>
+            </div>
+          </div>`)
+        .join("");
+    }
+  } else {
+    headerButtons.classList.add("hidden");
+    if (supplyManageMode) {
+      supplyManageMode = false;
+      document.getElementById("toggle-supply-manage-mode").checked = false;
+      addItemForm.classList.add("hidden");
+    }
+    listEl.innerHTML = items.map(renderItem).join("") || "<p>No items yet — add your first one above.</p>";
+  }
 }
 
 async function setInventoryStatus(itemId, status) {
@@ -625,15 +712,63 @@ async function setInventoryStatus(itemId, status) {
   loadInventory();
 }
 
+function renderItemEditForm(item) {
+  const roomOptions = roomsCache
+    .map((r) => `<option value="${r.id}" ${r.id === item.room_id ? "selected" : ""}>${r.name}</option>`)
+    .join("");
+
+  return `
+    <div class="add-form">
+      <input type="text" id="edit-item-name-${item.id}" value="${item.name}" />
+      <input type="text" id="edit-item-category-${item.id}" value="${item.category || ""}" placeholder="Category" />
+      <select id="edit-item-room-${item.id}">
+        <option value="">No room</option>
+        ${roomOptions}
+      </select>
+      <div class="form-buttons">
+        <button class="btn-primary" onclick="saveEditItem('${item.id}')">Save</button>
+        <button class="btn-text" onclick="cancelEditItem()">Cancel</button>
+      </div>
+    </div>`;
+}
+
+function startEditItem(itemId) {
+  editingItemId = itemId;
+  loadInventory();
+}
+
+function cancelEditItem() {
+  editingItemId = null;
+  loadInventory();
+}
+
+async function saveEditItem(itemId) {
+  const updates = {
+    name: document.getElementById(`edit-item-name-${itemId}`).value,
+    category: document.getElementById(`edit-item-category-${itemId}`).value || null,
+    room_id: document.getElementById(`edit-item-room-${itemId}`).value || null,
+  };
+
+  await db.from("inventory_items").update(updates).eq("id", itemId);
+
+  editingItemId = null;
+  loadInventory();
+}
+
 const addItemForm = document.getElementById("add-item-form");
-document.getElementById("show-add-item").addEventListener("click", () => addItemForm.classList.remove("hidden"));
 document.getElementById("cancel-add-item").addEventListener("click", () => addItemForm.classList.add("hidden"));
+
+function openAddItemForm() {
+  document.getElementById("item-room").value = roomFilter && roomFilter !== "none" ? roomFilter : "";
+  addItemForm.classList.remove("hidden");
+}
 
 addItemForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   await db.from("inventory_items").insert({
     name: document.getElementById("item-name").value,
     category: document.getElementById("item-category").value || null,
+    room_id: document.getElementById("item-room").value || null,
   });
   addItemForm.reset();
   addItemForm.classList.add("hidden");
