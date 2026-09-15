@@ -67,7 +67,7 @@ async function loadHistory() {
     groups[key].push(c);
   });
 
-  const inRoom = historySortMode === "room" && roomFilter &&
+  const inRoom = viewMode === "room" && roomFilter &&
     (roomFilter === "none" ? (groups["none"]?.length > 0) : roomsCache.some((r) => r.id === roomFilter));
 
   if (inRoom) {
@@ -76,8 +76,8 @@ async function loadHistory() {
     allTasksBtn.classList.remove("active");
   } else {
     roomsBtn.innerHTML = "Rooms";
-    roomsBtn.classList.toggle("active", historySortMode === "room");
-    allTasksBtn.classList.toggle("active", historySortMode === "priority");
+    roomsBtn.classList.toggle("active", viewMode === "room");
+    allTasksBtn.classList.toggle("active", viewMode === "priority");
   }
 
   const renderEntry = (c, showRoomLabel) => {
@@ -100,7 +100,7 @@ async function loadHistory() {
       </div>`;
   };
 
-  if (historySortMode === "room") {
+  if (viewMode === "room") {
     if (inRoom) {
       const roomLabel = roomFilter === "none" ? "No room" : roomName(roomFilter);
       const roomIconKey = roomFilter === "none" ? "" : (roomsCache.find((r) => r.id === roomFilter)?.wip_icon || "");
@@ -260,22 +260,23 @@ document.querySelectorAll(".subtab-button").forEach((btn) => {
   });
 });
 
-let choreSortMode = "room";
-let historySortMode = "room";
+let viewMode = "room"; // shared between Tasks and History — Rooms/All Tasks acts as one universal toggle
 let roomFilter = null; // shared between Tasks and History so picking a room in one keeps it selected in the other
 
 document.querySelectorAll(".sort-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
-    choreSortMode = btn.dataset.sort;
+    viewMode = btn.dataset.sort;
     roomFilter = null;
     loadChores();
+    loadHistory();
   });
 });
 
 document.querySelectorAll(".history-sort-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
-    historySortMode = btn.dataset.sort;
+    viewMode = btn.dataset.sort;
     roomFilter = null;
+    loadChores();
     loadHistory();
   });
 });
@@ -293,12 +294,10 @@ document.getElementById("home-link").addEventListener("click", () => {
 
   document.querySelectorAll(".sort-btn").forEach((b) => b.classList.remove("active"));
   document.querySelector('.sort-btn[data-sort="room"]').classList.add("active");
-  choreSortMode = "room";
+  viewMode = "room";
 
   document.querySelectorAll(".history-sort-btn").forEach((b) => b.classList.remove("active"));
   document.querySelector('.history-sort-btn[data-sort="room"]').classList.add("active");
-  historySortMode = "room";
-
   roomFilter = null;
   resetEditModes();
 });
@@ -345,7 +344,7 @@ function dueStatus(dueDate) {
     (new Date(dueDate).setHours(0,0,0,0) - new Date().setHours(0,0,0,0)) / msPerDay
   );
   if (days < 0) return { label: `Overdue by ${-days} days`, className: "due-overdue" };
-  if (days >= 0 && days <= 2) return { label: "Due today", className: "due-today" };
+  if (days >= 0 && days <= 1) return { label: "Due today", className: "due-today" };
   return { label: `Due in ${days} days`, className: "due-later" };
 }
 
@@ -388,7 +387,7 @@ async function loadChores() {
     groups[key].push({ chore, due });
   });
 
-  const inRoom = choreSortMode === "room" && roomFilter &&
+  const inRoom = viewMode === "room" && roomFilter &&
     (roomFilter === "none" ? (groups["none"]?.length > 0) : roomsCache.some((r) => r.id === roomFilter));
 
   if (inRoom) {
@@ -397,11 +396,11 @@ async function loadChores() {
     allTasksBtn.classList.remove("active");
   } else {
     roomsBtn.innerHTML = "Rooms";
-    roomsBtn.classList.toggle("active", choreSortMode === "room");
-    allTasksBtn.classList.toggle("active", choreSortMode === "priority");
+    roomsBtn.classList.toggle("active", viewMode === "room");
+    allTasksBtn.classList.toggle("active", viewMode === "priority");
   }
 
-  if (choreSortMode === "room") {
+  if (viewMode === "room") {
     if (inRoom) {
       headerButtons.classList.remove("hidden");
       const groupChores = (groups[roomFilter] || []).sort((a, b) => a.due - b.due);
