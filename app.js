@@ -31,15 +31,15 @@ function roomName(roomId) {
 
 function roomIcon(wip_icon) {
   const n = (wip_icon).toLowerCase();
-  if (n.includes("out")) return '<span class="material-symbols-outlined">garage_door</span>';
-  if (n.includes("car")) return '<span class="material-symbols-outlined">directions_car</span>';
-  if (n.includes("cook")) return '<span class="material-symbols-outlined">kitchen</span>';
-  if (n.includes("table")) return '<span class="material-symbols-outlined">table_restaurant</span>';
-  if (n.includes("couch")) return '<span class="material-symbols-outlined">chair</span>';
-  if (n.includes("bath")) return '<span class="material-symbols-outlined">faucet</span>';
-  if (n.includes("hall")) return '<span class="material-symbols-outlined">hallway</span>';
-  if (n.includes("bed")) return '<span class="material-symbols-outlined">bed</span>';
-  return '<span class="material-symbols-outlined">door_open</span>';
+  if (n.includes("out")) return '<span class="material-symbols-rounded">garage_door</span>';
+  if (n.includes("car")) return '<span class="material-symbols-rounded">directions_car</span>';
+  if (n.includes("cook")) return '<span class="material-symbols-rounded">kitchen</span>';
+  if (n.includes("table")) return '<span class="material-symbols-rounded">table_restaurant</span>';
+  if (n.includes("couch")) return '<span class="material-symbols-rounded">chair</span>';
+  if (n.includes("bath")) return '<span class="material-symbols-rounded">faucet</span>';
+  if (n.includes("hall")) return '<span class="material-symbols-rounded">hallway</span>';
+  if (n.includes("bed")) return '<span class="material-symbols-rounded">bed</span>';
+  return '<span class="material-symbols-rounded">door_open</span>';
 }
 
 function renderRoomOptions() {
@@ -76,7 +76,7 @@ async function loadHistory() {
     (roomFilter === "none" ? (groups["none"]?.length > 0) : roomsCache.some((r) => r.id === roomFilter));
 
   if (inRoom) {
-    roomsBtn.innerHTML = '<span class="material-symbols-outlined">arrow_back</span> Rooms';
+    roomsBtn.innerHTML = '<span class="material-symbols-rounded">arrow_back</span> Rooms';
     roomsBtn.classList.remove("active");
     allTasksBtn.classList.remove("active");
   } else {
@@ -401,7 +401,7 @@ async function loadChores() {
     (roomFilter === "none" ? (groups["none"]?.length > 0) : roomsCache.some((r) => r.id === roomFilter));
 
   if (inRoom) {
-    roomsBtn.innerHTML = '<span class="material-symbols-outlined">arrow_back</span> Rooms';
+    roomsBtn.innerHTML = '<span class="material-symbols-rounded">arrow_back</span> Rooms';
     roomsBtn.classList.remove("active");
     allTasksBtn.classList.remove("active");
   } else {
@@ -627,7 +627,7 @@ async function loadInventory() {
     (roomFilter === "none" ? (groups["none"]?.length > 0) : roomsCache.some((r) => r.id === roomFilter));
 
   if (inRoom) {
-    roomsBtn.innerHTML = '<span class="material-symbols-outlined">arrow_back</span> Rooms';
+    roomsBtn.innerHTML = '<span class="material-symbols-rounded">arrow_back</span> Rooms';
     roomsBtn.classList.remove("active");
     allBtn.classList.remove("active");
   } else {

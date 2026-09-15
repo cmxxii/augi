@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playwrite+ES:wght@100..400&family=SN+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=arrow_back,dine_lamp,directions_car,assignment,sort,history,task_alt,event,edit_square,hourglass_empty,label_important,problem,add_circle,delete,door_open,home_storage,nest_multi_room,bed,chair,kitchen,table_restaurant,garage_door,household_supplies,hallway,faucet,stairs,shopping_basket&display=block" rel="stylesheet" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=arrow_back,dine_lamp,directions_car,assignment,sort,history,task_alt,event,edit_square,hourglass_empty,label_important,problem,add_circle,delete,door_open,home_storage,nest_multi_room,bed,chair,kitchen,table_restaurant,garage_door,household_supplies,hallway,faucet,stairs,shopping_basket&display=block" />
 </head>
 <body>
 
@@ -35,7 +35,7 @@
       <h1 id="home-link">augi</h1>
       <div class="who-am-i">
         <span id="logged-in-name"></span>
-        <button id="show-feedback" class="btn-text"><span class="material-symbols-outlined">problem</span></button>
+        <button id="show-feedback" class="btn-text"><span class="material-symbols-rounded">problem</span></button>
       </div>
     </header>
 
@@ -63,9 +63,9 @@
       </div>
 
       <div class="subtab-nav">
-        <button class="subtab-button active" data-subtab="chores-todo-subtab"><span class="material-symbols-outlined">assignment</span> Tasks</button>
-        <button class="subtab-button" data-subtab="chores-history-subtab"><span class="material-symbols-outlined">history</span> History</button>
-        <button class="subtab-button" data-subtab="chores-supplies-subtab"><span class="material-symbols-outlined">household_supplies</span> Supplies</button>
+        <button class="subtab-button active" data-subtab="chores-todo-subtab"><span class="material-symbols-rounded">assignment</span> Tasks</button>
+        <button class="subtab-button" data-subtab="chores-history-subtab"><span class="material-symbols-rounded">history</span> History</button>
+        <button class="subtab-button" data-subtab="chores-supplies-subtab"><span class="material-symbols-rounded">household_supplies</span> Supplies</button>
       </div>
 
       <div id="chores-todo-subtab" class="subtab-panel active">
@@ -84,17 +84,17 @@
         </div>
         <form id="add-chore-form" class="add-form hidden">
           <div class="field-with-icon">
-            <span class="material-symbols-outlined field-icon">assignment</span>
+            <span class="material-symbols-rounded field-icon">assignment</span>
             <input type="text" id="chore-name" placeholder="Chore name (e.g. Sweep and vacuum)" required />
           </div>
           <div class="field-with-icon">
-            <span class="material-symbols-outlined field-icon">nest_multi_room</span>
+            <span class="material-symbols-rounded field-icon">nest_multi_room</span>
             <select id="chore-room">
               <option value="">Room</option>
             </select>
           </div>
           <div class="field-with-icon">
-            <span class="material-symbols-outlined field-icon">event</span>
+            <span class="material-symbols-rounded field-icon">event</span>
             <input type="number" id="chore-interval-days" placeholder="Frequency in days (e.g. enter 7 for once-a-week)" min="1" />
           </div>
           <div class="form-buttons">
@@ -133,7 +133,7 @@
           <input type="text" id="item-name" placeholder="Item name (e.g. Trash bags)" required />
           <input type="text" id="item-category" placeholder="Category (optional, e.g. Cleaning)" />
           <div class="field-with-icon">
-            <span class="material-symbols-outlined field-icon">nest_multi_room</span>
+            <span class="material-symbols-rounded field-icon">nest_multi_room</span>
             <select id="item-room">
               <option value="">Room</option>
             </select>
