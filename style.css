@@ -66,7 +66,7 @@ body {
 }
 
 .top-bar h1 {
-  font-family: "Playwrite US Modern", sans-serif;
+  font-family: "Playwrite ES", sans-serif;
   font-size: 1.6rem;
   margin: 0;
 }
@@ -492,7 +492,7 @@ select {
 }
 
 #login-card h1 {
-  font-family: "Playwrite US Modern", "SN Pro", sans-serif;
+  font-family: "Playwrite ES", "SN Pro", sans-serif;
   margin: 0;
   font-size: 1.8rem;
   text-align: center;
