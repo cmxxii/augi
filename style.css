@@ -732,3 +732,31 @@ select {
   width: 100%;
   padding: 12px;
 }
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.modal-header h3 {
+  text-align: left;
+  flex: 1;
+}
+
+.modal-close {
+  padding: 0;
+  line-height: 1;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.modal-actions .hidden {
+  display: none;
+}

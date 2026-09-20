@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playwrite+ES:wght@100..400&family=SN+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=face,face_2,face_3,face_4,arrow_back,dine_lamp,directions_car,assignment,sort,history,task_alt,event,edit_square,hourglass_empty,label_important,problem,add_circle,delete,door_open,home_storage,nest_multi_room,bed,chair,kitchen,table_restaurant,garage_door,household_supplies,hallway,faucet,stairs,shopping_basket&display=block" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=close,face,face_2,face_3,face_4,arrow_back,dine_lamp,directions_car,assignment,sort,history,task_alt,event,edit_square,hourglass_empty,label_important,problem,add_circle,delete,door_open,home_storage,nest_multi_room,bed,chair,kitchen,table_restaurant,garage_door,household_supplies,hallway,faucet,stairs,shopping_basket&display=block" />
 </head>
 <body>
 
@@ -35,10 +35,8 @@
       <h1 id="home-link">augi</h1>
       <nav class="tabs">
         <button class="tab-button active" data-tab="chores-tab">Chores</button>
-        <button class="tab-button" data-tab="groceries-tab">Pantry</button>
       </nav>
       <div class="who-am-i">
-        <button id="show-feedback" class="btn-text"><span class="material-symbols-rounded">problem</span></button>
         <button id="logged-in-name" class="user-button"></button>
       </div>
     </header>
@@ -47,9 +45,13 @@
       <div class="modal-box">
         <div class="modal-header">
           <h3 id="my-chores-title">My chores</h3>
-          <button id="close-my-chores" class="btn-text">Close</button>
+          <button id="close-my-chores" class="btn-text modal-close"><span class="material-symbols-rounded">close</span></button>
         </div>
         <div id="my-chores-list" class="list"></div>
+        <div class="modal-actions">
+          <button id="show-feedback" class="btn-text"><span class="material-symbols-rounded">problem</span> Feedback</button>
+          <button id="secret-pantry" class="btn-text hidden"><span class="material-symbols-rounded">kitchen</span> Pantry</button>
+        </div>
       </div>
     </div>
 

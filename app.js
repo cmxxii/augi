@@ -544,11 +544,22 @@ document.getElementById("logged-in-name").addEventListener("click", async () => 
   document.getElementById("my-chores-title").textContent = `Chores assigned to ${displayName(currentUser)}`;
   document.getElementById("my-chores-list").innerHTML =
     mine.map(({ chore, due }) => renderChoreCard(chore, due, true)).join("") || "<p>No chores assigned to you.</p>";
+    document.getElementById("secret-pantry")
+    .classList.toggle("hidden", displayName(currentUser) !== "CPP");
+
   document.getElementById("my-chores-modal").classList.remove("hidden");
 });
 
 document.getElementById("close-my-chores").addEventListener("click", () => {
   document.getElementById("my-chores-modal").classList.add("hidden");
+});
+
+document.getElementById("secret-pantry").addEventListener("click", () => {
+  document.getElementById("my-chores-modal").classList.add("hidden");
+  document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
+  document.querySelectorAll(".tab-button").forEach((b) => b.classList.remove("active"));
+  document.getElementById("groceries-tab").classList.add("active");
+  loadGroceries();
 });
 
 function filterChoresByRoom(key) {
