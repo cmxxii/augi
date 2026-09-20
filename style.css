@@ -60,7 +60,6 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  border-bottom: 1px solid var(--color-stui);
   flex-wrap: wrap;
   gap: 10px;
   width: 100%;
@@ -759,4 +758,53 @@ select {
 
 .modal-actions .hidden {
   display: none;
+}
+
+.version-button {
+  border: none;
+  background: none;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 2px 6px;
+}
+
+.version-button:hover {
+  color: var(--color-accent);
+}
+
+.version-notes {
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.version-notes h4 {
+  margin: 14px 0 6px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.version-notes h4:first-child {
+  margin-top: 0;
+}
+
+.version-notes ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--color-text);
+}
+
+.version-notes li {
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
 }

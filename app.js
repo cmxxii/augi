@@ -279,6 +279,14 @@ document.getElementById("submit-feedback").addEventListener("click", async () =>
   document.getElementById("feedback-modal").classList.add("hidden");
 });
 
+document.getElementById("show-version").addEventListener("click", () => {
+  document.getElementById("version-modal").classList.remove("hidden");
+});
+
+document.getElementById("close-version").addEventListener("click", () => {
+  document.getElementById("version-modal").classList.add("hidden");
+});
+
 // ============================================================
 // TAB SWITCHING
 // ============================================================

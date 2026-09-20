@@ -32,9 +32,11 @@
   <!-- MAIN APP — hidden until logged in -->
   <div id="app" class="hidden">
     <header class="top-bar">
-      <h1 id="home-link">augi</h1>
+      <div class="brand">
+        <h1 id="home-link">augi</h1>
+        <button id="show-version" class="version-button">v0.4</button>
+      </div>
       <nav class="tabs">
-        <button class="tab-button active" data-tab="chores-tab">Chores</button>
       </nav>
       <div class="who-am-i">
         <button id="logged-in-name" class="user-button"></button>
@@ -49,8 +51,35 @@
         </div>
         <div id="my-chores-list" class="list"></div>
         <div class="modal-actions">
-          <button id="show-feedback" class="btn-text"><span class="material-symbols-rounded">problem</span> Feedback</button>
           <button id="secret-pantry" class="btn-text hidden"><span class="material-symbols-rounded">kitchen</span> Pantry</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="version-modal" class="modal-overlay hidden">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3>What's new — v0.1</h3>
+          <button id="close-version" class="btn-text modal-close"><span class="material-symbols-rounded">close</span></button>
+        </div>
+
+        <div class="version-notes">
+          <h4>v0.4</h4>
+          <ul>
+            <li>Chores can now be assigned to one or more of us — tap your name up top to see just yours.</li>
+            <li>Your name turns yellow or red if you have anything due today or overdue.</li>
+            <li>Supplies are now organized by room, same as chores.</li>
+          </ul>
+
+          <h4>v0.3</h4>
+          <ul>
+            <li>Rooms and All Tasks now stay in sync across Tasks, History, and Supplies.</li>
+            <li>Added a Manage switch for adding and editing things inside a room.</li>
+          </ul>
+        </div>
+
+        <div class="modal-actions">
+          <button id="show-feedback" class="btn-text"><span class="material-symbols-rounded">problem</span> Feedback</button>
         </div>
       </div>
     </div>
@@ -68,9 +97,6 @@
 
  <!-- CHORES TAB -->
     <main id="chores-tab" class="tab-panel active" data-subtab="chores-todo-subtab">
-      <div class="panel-header">
-        <h2>Chores</h2>
-      </div>
       <div class="sort-toggle">
         <div class="sort-toggle-buttons">
           <button class="sort-btn active" data-sort="room">Rooms</button>
