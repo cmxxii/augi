@@ -5,9 +5,9 @@
 :root {
   --color-bg: #e3dceb;         /* thistle: light lavender background */
   --color-surface: #ffffff;    /* card backgrounds */
-  --color-border: #9c90ad;
+  --color-border: #796d8a;
   --color-text: #423c4b;
-  --color-text-muted: #9c90ad;
+  --color-text-muted: #796d8a;
   --color-accent: #404bca;     /* used for buttons/highlights */
   --color-accent-hover: #29339b; /* egyptian blue */
 
@@ -17,8 +17,8 @@
   --color-today: #404bca; 
   --color-today-bg: #404cca28; 
 
-  --color-ok: #9c90ad;
-  --color-stui: #ccbce1; /* aka STandard UI for things like toggle switch */
+  --color-ok: #796d8a;
+  --color-stui: #c1b0d6; /* aka STandard UI for things like toggle switch */
   --radius: 10px;
 }
 
@@ -60,7 +60,7 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-stui);
   flex-wrap: wrap;
   gap: 10px;
 }
@@ -87,6 +87,65 @@ body {
 
 #home-link {
   cursor: pointer;
+}
+
+.assignee-toggles {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.assignee-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border: 1px solid #ccbce1;
+  border-radius: 6px;
+  background: none;
+  font-size: 0.85rem;
+}
+
+.assignee-btn.active {
+  background: var(--color-accent);
+  color: white;
+  border-color: var(--color-accent);
+}
+
+.card-assignees {
+  display: flex;
+  gap: 4px;
+}
+
+.card-assignees .material-symbols-rounded {
+  font-size: 1.1rem;
+  color: var(--color-text-muted);
+}
+
+.user-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.user-button.due-overdue {
+  background-color: var(--color-overdue-bg);
+  border: 2px solid var(--color-overdue);
+  color: var(--color-overdue);
+  font-weight: 600;
+}
+
+.user-button.due-today {
+  background-color: var(--color-today-bg);
+  border: 2px solid var(--color-today);
+  color: var(--color-today);
+  font-weight: 600;
 }
 
 .modal-overlay {
@@ -128,12 +187,10 @@ body {
 .tabs {
   display: flex;
   gap: 4px;
-  padding: 12px 20px 0;
-  border-bottom: 1px solid var(--color-border);
 }
 
 .tab-button {
-  padding: 10px 16px;
+  padding: 4px 12px;
   border: none;
   background: none;
   font-size: 0.95rem;
@@ -175,7 +232,7 @@ body {
   display: flex;
   gap: 4px;
   margin-bottom: 16px;
-  border-bottom: 1px solid #e5e5e5;
+  border-bottom: 1px solid transparent;
 }
 
 .subtab-button {
@@ -205,6 +262,14 @@ body {
   display: block;
 }
 
+#chores-tab:not([data-subtab="chores-todo-subtab"]) #chore-manage-wrap {
+  display: none;
+}
+
+#chores-tab:not([data-subtab="chores-supplies-subtab"]) #supply-manage-wrap {
+  display: none;
+}
+
 .sort-toggle {
   font-size: 0.75rem;
   text-transform: uppercase;
@@ -222,9 +287,7 @@ body {
   gap: 8px;
 }
 
-.sort-btn,
-.history-sort-btn,
-.supplies-sort-btn {
+.sort-btn {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -237,9 +300,7 @@ body {
   cursor: pointer;
 }
 
-.sort-btn.active,
-.history-sort-btn.active,
-.supplies-sort-btn.active {
+.sort-btn.active {
   background: var(--color-accent);
   color: white;
   border-color: var(--color-accent);
@@ -445,6 +506,27 @@ select {
   letter-spacing: 0.04em;
 }
 
+.card-title-line {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.frequency-inline {
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.last-done-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
 .room-card {
   cursor: pointer;
 }
@@ -609,7 +691,7 @@ select {
   border-radius: var(--radius);
   padding: 32px 28px;
   width: 100%;
-  max-width: 360px;
+  max-width: 700px;
   display: flex;
   flex-direction: column;
   gap: 14px;

@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playwrite+ES:wght@100..400&family=SN+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=arrow_back,dine_lamp,directions_car,assignment,sort,history,task_alt,event,edit_square,hourglass_empty,label_important,problem,add_circle,delete,door_open,home_storage,nest_multi_room,bed,chair,kitchen,table_restaurant,garage_door,household_supplies,hallway,faucet,stairs,shopping_basket&display=block" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=face,face_2,face_3,face_4,arrow_back,dine_lamp,directions_car,assignment,sort,history,task_alt,event,edit_square,hourglass_empty,label_important,problem,add_circle,delete,door_open,home_storage,nest_multi_room,bed,chair,kitchen,table_restaurant,garage_door,household_supplies,hallway,faucet,stairs,shopping_basket&display=block" />
 </head>
 <body>
 
@@ -33,11 +33,25 @@
   <div id="app" class="hidden">
     <header class="top-bar">
       <h1 id="home-link">augi</h1>
+      <nav class="tabs">
+        <button class="tab-button active" data-tab="chores-tab">Chores</button>
+        <button class="tab-button" data-tab="groceries-tab">Pantry</button>
+      </nav>
       <div class="who-am-i">
-        <span id="logged-in-name"></span>
+        <button id="logged-in-name" class="user-button"></button>
         <button id="show-feedback" class="btn-text"><span class="material-symbols-rounded">problem</span></button>
       </div>
     </header>
+
+    <div id="my-chores-modal" class="modal-overlay hidden">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3 id="my-chores-title">My chores</h3>
+          <button id="close-my-chores" class="btn-text">Close</button>
+        </div>
+        <div id="my-chores-list" class="list"></div>
+      </div>
+    </div>
 
     <div id="feedback-modal" class="modal-overlay hidden">
       <div class="modal-box">
@@ -49,17 +63,29 @@
         </div>
       </div>
     </div>
-    
-
-    <nav class="tabs">
-      <button class="tab-button active" data-tab="chores-tab">Chores</button>
-      <button class="tab-button" data-tab="groceries-tab">Pantry</button>
-    </nav>
 
  <!-- CHORES TAB -->
-    <main id="chores-tab" class="tab-panel active">
-      <div class="panel-header">
-        <h2>Chores</h2>
+    <main id="chores-tab" class="tab-panel active" data-subtab="chores-todo-subtab">
+
+      <div class="sort-toggle">
+        <div class="sort-toggle-buttons">
+          <button class="sort-btn active" data-sort="room">Rooms</button>
+          <button class="sort-btn" data-sort="priority">All Tasks</button>
+        </div>
+        <div id="chore-manage-wrap" class="header-buttons hidden">
+          <label class="toggle-switch">
+            Manage:
+            <input type="checkbox" id="toggle-chore-manage-mode" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div id="supply-manage-wrap" class="header-buttons hidden">
+          <label class="toggle-switch">
+            Manage:
+            <input type="checkbox" id="toggle-supply-manage-mode" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
       </div>
 
       <div class="subtab-nav">
@@ -69,19 +95,7 @@
       </div>
 
       <div id="chores-todo-subtab" class="subtab-panel active">
-        <div class="sort-toggle">
-          <div class="sort-toggle-buttons">
-            <button class="sort-btn active" data-sort="room">Rooms</button>
-            <button class="sort-btn" data-sort="priority">All Tasks</button>
-          </div>
-          <div class="header-buttons hidden">
-            <label class="toggle-switch">
-              Manage:
-              <input type="checkbox" id="toggle-chore-manage-mode" />
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-        </div>
+        
         <form id="add-chore-form" class="add-form hidden">
           <div class="field-with-icon">
             <span class="material-symbols-rounded field-icon">assignment</span>
@@ -97,6 +111,7 @@
             <span class="material-symbols-rounded field-icon">event</span>
             <input type="number" id="chore-interval-days" placeholder="Frequency in days (e.g. enter 7 for once-a-week)" min="1" />
           </div>
+          <div id="chore-assignees" class="assignee-toggles"></div>
           <div class="form-buttons">
             <button type="submit" class="btn-primary">Save chore</button>
             <button type="button" id="cancel-add-chore" class="btn-text">Cancel</button>
@@ -106,29 +121,11 @@
       </div>
 
       <div id="chores-history-subtab" class="subtab-panel">
-        <div class="sort-toggle">
-          <div class="sort-toggle-buttons">
-            <button class="history-sort-btn active" data-sort="room">Rooms</button>
-            <button class="history-sort-btn" data-sort="priority">All Tasks</button>
-          </div>
-        </div>
         <div id="history-list" class="list"></div>
       </div>
 
       <div id="chores-supplies-subtab" class="subtab-panel">
-        <div class="sort-toggle">
-          <div class="sort-toggle-buttons">
-            <button class="supplies-sort-btn active" data-sort="room">Rooms</button>
-            <button class="supplies-sort-btn" data-sort="priority">All</button>
-          </div>
-          <div class="header-buttons hidden">
-            <label class="toggle-switch">
-              Manage:
-              <input type="checkbox" id="toggle-supply-manage-mode" />
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-        </div>
+        
         <form id="add-item-form" class="add-form hidden">
           <input type="text" id="item-name" placeholder="Item name (e.g. Trash bags)" required />
           <input type="text" id="item-category" placeholder="Category (optional, e.g. Cleaning)" />

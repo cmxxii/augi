@@ -62,8 +62,8 @@ async function loadHistory() {
   if (error) { console.error(error); return; }
 
   const listEl = document.getElementById("history-list");
-  const roomsBtn = document.querySelector('#chores-history-subtab .history-sort-btn[data-sort="room"]');
-  const allTasksBtn = document.querySelector('#chores-history-subtab .history-sort-btn[data-sort="priority"]');
+  const roomsBtn = document.querySelector('.sort-btn[data-sort="room"]');
+  const allTasksBtn = document.querySelector('.sort-btn[data-sort="priority"]');
 
   const groups = {};
   completions.forEach((c) => {
@@ -173,12 +173,40 @@ function resetEditModes() {
 
 // Cache of email → display name, loaded once after login
 let displayNameCache = {};
+let peopleCache = [];
+
+const USER_ICONS = { AKS: "face_4", CPP: "face_3", OCE: "face" };
+const USER_ORDER = ["AKS", "CPP", "OCE"];
 
 async function loadDisplayNameCache() {
   const { data, error } = await db.from("people").select("user_email, display_name");
   if (!error && data) {
     displayNameCache = Object.fromEntries(data.map((row) => [row.user_email, row.display_name]));
+    peopleCache = data
+      .filter((p) => USER_ICONS[p.display_name])
+      .sort((a, b) => USER_ORDER.indexOf(a.display_name) - USER_ORDER.indexOf(b.display_name));
+    renderAssigneeToggles("chore-assignees");
   }
+}
+
+function assigneeIcon(displayNameValue) {
+  return USER_ICONS[displayNameValue] || "person";
+}
+
+function renderAssigneeToggles(containerId, selectedEmails = []) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = peopleCache
+    .map((p) => `
+      <button type="button" class="assignee-btn ${selectedEmails.includes(p.user_email) ? "active" : ""}" data-email="${p.user_email}" onclick="this.classList.toggle('active')">
+        <span class="material-symbols-rounded">${assigneeIcon(p.display_name)}</span> ${p.display_name}
+      </button>`)
+    .join("");
+}
+
+function getSelectedAssignees(containerId) {
+  return Array.from(document.querySelectorAll(`#${containerId} .assignee-btn.active`))
+    .map((btn) => btn.dataset.email);
 }
 
 function displayName(user) {
@@ -272,6 +300,10 @@ document.querySelectorAll(".subtab-button").forEach((btn) => {
     btn.classList.add("active");
     document.getElementById(btn.dataset.subtab).classList.add("active");
 
+    document.getElementById("chores-tab").dataset.subtab = btn.dataset.subtab;
+    const allBtn = document.querySelector('.sort-btn[data-sort="priority"]');
+    if (allBtn) allBtn.textContent = btn.dataset.subtab === "chores-supplies-subtab" ? "All" : "All Tasks";
+
     if (btn.dataset.subtab === "chores-todo-subtab") loadChores();
     if (btn.dataset.subtab === "chores-history-subtab") loadHistory();
     if (btn.dataset.subtab === "chores-supplies-subtab") loadInventory();
@@ -281,7 +313,7 @@ document.querySelectorAll(".subtab-button").forEach((btn) => {
 let viewMode = "room"; // shared between Tasks and History — Rooms/All Tasks acts as one universal toggle
 let roomFilter = null; // shared between Tasks and History so picking a room in one keeps it selected in the other
 
-document.querySelectorAll(".sort-btn, .history-sort-btn, .supplies-sort-btn").forEach((btn) => {
+document.querySelectorAll(".sort-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
     viewMode = btn.dataset.sort;
     roomFilter = null;
@@ -306,8 +338,6 @@ document.getElementById("home-link").addEventListener("click", () => {
   document.querySelector('.sort-btn[data-sort="room"]').classList.add("active");
   viewMode = "room";
 
-  document.querySelectorAll(".history-sort-btn").forEach((b) => b.classList.remove("active"));
-  document.querySelector('.history-sort-btn[data-sort="room"]').classList.add("active");
   roomFilter = null;
   resetEditModes();
 });
@@ -376,7 +406,7 @@ function lastDoneLabel(chore) {
 }
 
 async function loadChores() {
-  const { data: chores, error } = await db.from("chores").select("*");
+  const { data: chores, error } = await db.from("chores").select("*, chore_assignments(user_email)");
   if (error) {
     document.getElementById("chores-list").innerHTML =
       `<p>Couldn't load chores. Check the console for details.</p>`;
@@ -384,11 +414,14 @@ async function loadChores() {
     return;
   }
 
+  chores.forEach((c) => { c.assignedEmails = (c.chore_assignments || []).map((a) => a.user_email); });
+
   const listEl = document.getElementById("chores-list");
-  const headerButtons = document.querySelector("#chores-todo-subtab .header-buttons");
-  const roomsBtn = document.querySelector('#chores-todo-subtab .sort-btn[data-sort="room"]');
-  const allTasksBtn = document.querySelector('#chores-todo-subtab .sort-btn[data-sort="priority"]');
+  const headerButtons = document.getElementById("chore-manage-wrap");
+  const roomsBtn = document.querySelector('.sort-btn[data-sort="room"]');
+  const allTasksBtn = document.querySelector('.sort-btn[data-sort="priority"]');
   const withDue = chores.map((c) => ({ chore: c, due: nextDueDate(c) }));
+  updateUserButtonState(withDue);
 
   const groups = {};
   withDue.forEach(({ chore, due }) => {
@@ -483,6 +516,41 @@ function backToRooms() {
   loadInventory();
 }
 
+function updateUserButtonState(withDue) {
+  const btn = document.getElementById("logged-in-name");
+  if (!btn || !currentUser) return;
+
+  btn.classList.remove("due-overdue", "due-today");
+  btn.innerHTML = `<span class="material-symbols-rounded">${assigneeIcon(displayName(currentUser))}</span> ${displayName(currentUser)}`;
+
+  const mine = withDue.filter(({ chore }) => (chore.assignedEmails || []).includes(currentUser.email));
+  const hasOverdue = mine.some(({ due }) => dueStatus(due).className === "due-overdue");
+  const hasToday = mine.some(({ due }) => dueStatus(due).className === "due-today");
+
+  if (hasOverdue) btn.classList.add("due-overdue");
+  else if (hasToday) btn.classList.add("due-today");
+}
+
+document.getElementById("logged-in-name").addEventListener("click", async () => {
+  const { data: chores, error } = await db.from("chores").select("*, chore_assignments(user_email)");
+  if (error) return;
+
+  chores.forEach((c) => { c.assignedEmails = (c.chore_assignments || []).map((a) => a.user_email); });
+  const mine = chores
+    .filter((c) => (c.assignedEmails || []).includes(currentUser.email))
+    .map((c) => ({ chore: c, due: nextDueDate(c) }))
+    .sort((a, b) => a.due - b.due);
+
+  document.getElementById("my-chores-title").textContent = `${displayName(currentUser)}'s chores`;
+  document.getElementById("my-chores-list").innerHTML =
+    mine.map(({ chore, due }) => renderChoreCard(chore, due, true)).join("") || "<p>No chores assigned to you.</p>";
+  document.getElementById("my-chores-modal").classList.remove("hidden");
+});
+
+document.getElementById("close-my-chores").addEventListener("click", () => {
+  document.getElementById("my-chores-modal").classList.add("hidden");
+});
+
 function filterChoresByRoom(key) {
   choresRoomFilter = key;
   loadChores();
@@ -502,13 +570,23 @@ function renderChoreCard(chore, due, showRoomLabel) {
     const roomLabelText = chore.room_id ? roomName(chore.room_id) : "No room";
     roomLabelHtml = `<div class="meta room-label">${roomIcon(roomIconKey)} ${roomLabelText}</div>`;
   }
+  const assigneeIconsHtml = (chore.assignedEmails && chore.assignedEmails.length)
+    ? `<div class="card-assignees">${chore.assignedEmails.map((email) => `<span class="material-symbols-rounded" title="${displayNameCache[email] || email}">${assigneeIcon(displayNameCache[email])}</span>`).join("")}</div>`
+    : "";
+
   return `
     <div class="card ${status.className}">
       <div class="card-info">
         ${roomLabelHtml}
-        <strong>${chore.name}</strong>
-        <div class="meta ${status.className}">${status.label} · ${frequencyLabel(chore)}</div>
-        <div class="meta last-done-label">${lastDoneLabel(chore)}</div>
+        <div class="card-title-line">
+          <strong>${chore.name}</strong>
+          <span class="meta frequency-inline">${frequencyLabel(chore)}</span>
+        </div>
+        <div class="meta ${status.className}">${status.label}</div>
+        <div class="meta last-done-line">
+          ${assigneeIconsHtml}
+          <span class="last-done-label">${lastDoneLabel(chore)}</span>
+        </div>
       </div>
       <div class="card-buttons">
         ${choreManageMode ? "" : `<button class="btn-primary" onclick="markChoreDone('${chore.id}')">DONE</button>`}
@@ -527,6 +605,13 @@ function renderChoreEditForm(chore) {
     ? `<div id="freq-hint" class="meta">For chores assigned to specific weekdays (like trash day), edit 'frequency' directly in database.</div>`
     : `<input type="number" id="edit-interval-days-${chore.id}" min="1" value="${chore.frequency_interval_days || ""}" placeholder="Repeat every N days" />`;
 
+  const assigneeOptionsHtml = peopleCache
+    .map((p) => `
+      <button type="button" class="assignee-btn ${(chore.assignedEmails || []).includes(p.user_email) ? "active" : ""}" data-email="${p.user_email}" onclick="this.classList.toggle('active')">
+        <span class="material-symbols-rounded">${assigneeIcon(p.display_name)}</span> ${p.display_name}
+      </button>`)
+    .join("");
+
   return `
     <div class="add-form">
       <input type="text" id="edit-name-${chore.id}" value="${chore.name}" />
@@ -534,6 +619,7 @@ function renderChoreEditForm(chore) {
         ${roomOptions}
       </select>
       ${frequencyFieldHtml}
+      <div id="edit-assignees-${chore.id}" class="assignee-toggles">${assigneeOptionsHtml}</div>
       <div class="form-buttons">
         <button class="btn-primary" onclick="saveEditChore('${chore.id}')">Save</button>
         <button class="btn-text" onclick="cancelEditChore()">Cancel</button>
@@ -565,6 +651,12 @@ async function saveEditChore(choreId) {
 
   await db.from("chores").update(updates).eq("id", choreId);
 
+  const selectedEmails = getSelectedAssignees(`edit-assignees-${choreId}`);
+  await db.from("chore_assignments").delete().eq("chore_id", choreId);
+  if (selectedEmails.length) {
+    await db.from("chore_assignments").insert(selectedEmails.map((email) => ({ chore_id: choreId, user_email: email })));
+  }
+
   editingChoreId = null;
   loadChores();
 }
@@ -586,18 +678,27 @@ document.getElementById("cancel-add-chore").addEventListener("click", () => addC
 
 function openAddChoreForm() {
   document.getElementById("chore-room").value = roomFilter && roomFilter !== "none" ? roomFilter : "";
+  renderAssigneeToggles("chore-assignees");
   addChoreForm.classList.remove("hidden");
 }
 
 addChoreForm.addEventListener("submit", async (e) => {
   e.preventDefault();
-  await db.from("chores").insert({
+  const { data: newChore, error } = await db.from("chores").insert({
     name: document.getElementById("chore-name").value,
     room_id: document.getElementById("chore-room").value || null,
     frequency_type: "interval_days",
     frequency_interval_days: Number(document.getElementById("chore-interval-days").value),
     frequency_weekdays: null,
-  });
+  }).select().single();
+
+  if (!error && newChore) {
+    const emails = getSelectedAssignees("chore-assignees");
+    if (emails.length) {
+      await db.from("chore_assignments").insert(emails.map((email) => ({ chore_id: newChore.id, user_email: email })));
+    }
+  }
+
   addChoreForm.reset();
   addChoreForm.classList.add("hidden");
   loadChores();
@@ -612,9 +713,9 @@ async function loadInventory() {
   if (error) { console.error(error); return; }
 
   const listEl = document.getElementById("inventory-list");
-  const headerButtons = document.querySelector("#chores-supplies-subtab .header-buttons");
-  const roomsBtn = document.querySelector('#chores-supplies-subtab .supplies-sort-btn[data-sort="room"]');
-  const allBtn = document.querySelector('#chores-supplies-subtab .supplies-sort-btn[data-sort="priority"]');
+  const headerButtons = document.getElementById("supply-manage-wrap");
+  const roomsBtn = document.querySelector('.sort-btn[data-sort="room"]');
+  const allBtn = document.querySelector('.sort-btn[data-sort="priority"]');
 
   const groups = {};
   items.forEach((item) => {
