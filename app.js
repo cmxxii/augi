@@ -545,6 +545,7 @@ function updateUserButtonState(withDue) {
 
   btn.classList.remove("due-overdue", "due-today");
   btn.innerHTML = `<span class="material-symbols-rounded">${assigneeIcon(displayName(currentUser))}</span>`;
+  btn.title = displayName(currentUser);
 
   const me = displayName(currentUser);
   const mine = withDue.filter(({ chore }) => (chore.assignedNames || []).includes(me));
