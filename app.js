@@ -521,7 +521,7 @@ function updateUserButtonState(withDue) {
   if (!btn || !currentUser) return;
 
   btn.classList.remove("due-overdue", "due-today");
-  btn.innerHTML = `<span class="material-symbols-rounded">${assigneeIcon(displayName(currentUser))}</span> ${displayName(currentUser)}`;
+  btn.innerHTML = `<span class="material-symbols-rounded">${assigneeIcon(displayName(currentUser))}</span>`;
 
   const mine = withDue.filter(({ chore }) => (chore.assignedEmails || []).includes(currentUser.email));
   const hasOverdue = mine.some(({ due }) => dueStatus(due).className === "due-overdue");
@@ -541,7 +541,7 @@ document.getElementById("logged-in-name").addEventListener("click", async () => 
     .map((c) => ({ chore: c, due: nextDueDate(c) }))
     .sort((a, b) => a.due - b.due);
 
-  document.getElementById("my-chores-title").textContent = `${displayName(currentUser)}'s chores`;
+  document.getElementById("my-chores-title").textContent = `Chores assigned to ${displayName(currentUser)}`;
   document.getElementById("my-chores-list").innerHTML =
     mine.map(({ chore, due }) => renderChoreCard(chore, due, true)).join("") || "<p>No chores assigned to you.</p>";
   document.getElementById("my-chores-modal").classList.remove("hidden");

@@ -63,6 +63,9 @@ body {
   border-bottom: 1px solid var(--color-stui);
   flex-wrap: wrap;
   gap: 10px;
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
 }
 
 .top-bar h1 {
@@ -118,7 +121,7 @@ body {
 }
 
 .card-assignees .material-symbols-rounded {
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   color: var(--color-text-muted);
 }
 
@@ -127,23 +130,24 @@ body {
   align-items: center;
   gap: 4px;
   padding: 4px 10px;
-  border: 1px solid var(--color-border);
+  border: none;
   border-radius: var(--radius);
-  background: var(--color-surface);
+  background: none;
   font-size: 0.9rem;
   cursor: pointer;
+  color: var(--color-text);
 }
 
 .user-button.due-overdue {
-  background-color: var(--color-overdue-bg);
-  border: 2px solid var(--color-overdue);
+  background-color: none;
+  border: none;
   color: var(--color-overdue);
   font-weight: 600;
 }
 
 .user-button.due-today {
-  background-color: var(--color-today-bg);
-  border: 2px solid var(--color-today);
+  background-color: none;
+  border: none;
   color: var(--color-today);
   font-weight: 600;
 }
