@@ -103,15 +103,16 @@ body {
   gap: 4px;
   padding: 6px 12px;
   border: 1px solid #ccbce1;
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: none;
   font-size: 0.85rem;
+  color: var(--color-text-muted);
 }
 
 .assignee-btn.active {
-  background: var(--color-accent);
-  color: white;
-  border-color: var(--color-accent);
+  background: var(--color-stui);
+  color: var(--color-text);
+  border-color: var(--color-stui);
 }
 
 .card-assignees {

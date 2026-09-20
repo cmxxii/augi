@@ -43,7 +43,7 @@ function roomIcon(wip_icon) {
 }
 
 function renderRoomOptions() {
-  ["chore-room", "item-room"].forEach((id) => {
+  ["chore-room"].forEach((id) => {
     const select = document.getElementById(id);
     if (!select) return;
     const current = select.value;
@@ -193,20 +193,35 @@ function assigneeIcon(displayNameValue) {
   return USER_ICONS[displayNameValue] || "person";
 }
 
-function renderAssigneeToggles(containerId, selectedEmails = []) {
+function renderAssigneeToggles(containerId, selectedNames = []) {
   const container = document.getElementById(containerId);
   if (!container) return;
   container.innerHTML = peopleCache
     .map((p) => `
-      <button type="button" class="assignee-btn ${selectedEmails.includes(p.user_email) ? "active" : ""}" data-email="${p.user_email}" onclick="this.classList.toggle('active')">
+      <button type="button" class="assignee-btn ${selectedNames.includes(p.display_name) ? "active" : ""}" data-name="${p.display_name}" onclick="this.classList.toggle('active')">
         <span class="material-symbols-rounded">${assigneeIcon(p.display_name)}</span> ${p.display_name}
       </button>`)
     .join("");
 }
 
+function roomTogglesHtml(containerId, selectedIds = []) {
+  const buttons = roomsCache
+    .map((r) => `
+      <button type="button" class="assignee-btn ${selectedIds.includes(r.id) ? "active" : ""}" data-room="${r.id}" onclick="this.classList.toggle('active')">
+        ${roomIcon(r.wip_icon)} ${r.name}
+      </button>`)
+    .join("");
+  return `<div id="${containerId}" class="assignee-toggles">${buttons}</div>`;
+}
+
+function getSelectedRooms(containerId) {
+  return Array.from(document.querySelectorAll(`#${containerId} .assignee-btn.active`))
+    .map((btn) => btn.dataset.room);
+}
+
 function getSelectedAssignees(containerId) {
   return Array.from(document.querySelectorAll(`#${containerId} .assignee-btn.active`))
-    .map((btn) => btn.dataset.email);
+    .map((btn) => btn.dataset.name);
 }
 
 function displayName(user) {
@@ -414,7 +429,7 @@ function lastDoneLabel(chore) {
 }
 
 async function loadChores() {
-  const { data: chores, error } = await db.from("chores").select("*, chore_assignments(user_email)");
+  const { data: chores, error } = await db.from("chores").select("*, chore_assignments(display_name)");
   if (error) {
     document.getElementById("chores-list").innerHTML =
       `<p>Couldn't load chores. Check the console for details.</p>`;
@@ -422,7 +437,7 @@ async function loadChores() {
     return;
   }
 
-  chores.forEach((c) => { c.assignedEmails = (c.chore_assignments || []).map((a) => a.user_email); });
+  chores.forEach((c) => { c.assignedNames = (c.chore_assignments || []).map((a) => a.display_name); });
 
   const listEl = document.getElementById("chores-list");
   const headerButtons = document.getElementById("chore-manage-wrap");
@@ -531,7 +546,8 @@ function updateUserButtonState(withDue) {
   btn.classList.remove("due-overdue", "due-today");
   btn.innerHTML = `<span class="material-symbols-rounded">${assigneeIcon(displayName(currentUser))}</span>`;
 
-  const mine = withDue.filter(({ chore }) => (chore.assignedEmails || []).includes(currentUser.email));
+  const me = displayName(currentUser);
+  const mine = withDue.filter(({ chore }) => (chore.assignedNames || []).includes(me));
   const hasOverdue = mine.some(({ due }) => dueStatus(due).className === "due-overdue");
   const hasToday = mine.some(({ due }) => dueStatus(due).className === "due-today");
 
@@ -540,12 +556,13 @@ function updateUserButtonState(withDue) {
 }
 
 document.getElementById("logged-in-name").addEventListener("click", async () => {
-  const { data: chores, error } = await db.from("chores").select("*, chore_assignments(user_email)");
+  const { data: chores, error } = await db.from("chores").select("*, chore_assignments(display_name)");
   if (error) return;
 
-  chores.forEach((c) => { c.assignedEmails = (c.chore_assignments || []).map((a) => a.user_email); });
+  const me = displayName(currentUser);
+  chores.forEach((c) => { c.assignedNames = (c.chore_assignments || []).map((a) => a.display_name); });
   const mine = chores
-    .filter((c) => (c.assignedEmails || []).includes(currentUser.email))
+    .filter((c) => (c.assignedNames || []).includes(me))
     .map((c) => ({ chore: c, due: nextDueDate(c) }))
     .sort((a, b) => a.due - b.due);
 
@@ -589,8 +606,8 @@ function renderChoreCard(chore, due, showRoomLabel) {
     const roomLabelText = chore.room_id ? roomName(chore.room_id) : "No room";
     roomLabelHtml = `<div class="meta room-label">${roomIcon(roomIconKey)} ${roomLabelText}</div>`;
   }
-  const assigneeIconsHtml = (chore.assignedEmails && chore.assignedEmails.length)
-    ? `<div class="card-assignees">${chore.assignedEmails.map((email) => `<span class="material-symbols-rounded" title="${displayNameCache[email] || email}">${assigneeIcon(displayNameCache[email])}</span>`).join("")}</div>`
+  const assigneeIconsHtml = (chore.assignedNames && chore.assignedNames.length)
+    ? `<div class="card-assignees">${chore.assignedNames.map((name) => `<span class="material-symbols-rounded" title="${name}">${assigneeIcon(name)}</span>`).join("")}</div>`
     : "";
 
   return `
@@ -626,7 +643,7 @@ function renderChoreEditForm(chore) {
 
   const assigneeOptionsHtml = peopleCache
     .map((p) => `
-      <button type="button" class="assignee-btn ${(chore.assignedEmails || []).includes(p.user_email) ? "active" : ""}" data-email="${p.user_email}" onclick="this.classList.toggle('active')">
+      <button type="button" class="assignee-btn ${(chore.assignedNames || []).includes(p.display_name) ? "active" : ""}" data-name="${p.display_name}" onclick="this.classList.toggle('active')">
         <span class="material-symbols-rounded">${assigneeIcon(p.display_name)}</span> ${p.display_name}
       </button>`)
     .join("");
@@ -670,10 +687,10 @@ async function saveEditChore(choreId) {
 
   await db.from("chores").update(updates).eq("id", choreId);
 
-  const selectedEmails = getSelectedAssignees(`edit-assignees-${choreId}`);
+  const selectedNames = getSelectedAssignees(`edit-assignees-${choreId}`);
   await db.from("chore_assignments").delete().eq("chore_id", choreId);
-  if (selectedEmails.length) {
-    await db.from("chore_assignments").insert(selectedEmails.map((email) => ({ chore_id: choreId, user_email: email })));
+  if (selectedNames.length) {
+    await db.from("chore_assignments").insert(selectedNames.map((name) => ({ chore_id: choreId, display_name: name })));
   }
 
   editingChoreId = null;
@@ -712,9 +729,9 @@ addChoreForm.addEventListener("submit", async (e) => {
   }).select().single();
 
   if (!error && newChore) {
-    const emails = getSelectedAssignees("chore-assignees");
-    if (emails.length) {
-      await db.from("chore_assignments").insert(emails.map((email) => ({ chore_id: newChore.id, user_email: email })));
+    const names = getSelectedAssignees("chore-assignees");
+    if (names.length) {
+      await db.from("chore_assignments").insert(names.map((name) => ({ chore_id: newChore.id, display_name: name })));
     }
   }
 
@@ -728,8 +745,10 @@ addChoreForm.addEventListener("submit", async (e) => {
 // ============================================================
 
 async function loadInventory() {
-  const { data: items, error } = await db.from("inventory_items").select("*").order("category");
+  const { data: items, error } = await db.from("inventory_items").select("*, item_rooms(room_id)").order("category");
   if (error) { console.error(error); return; }
+
+  items.forEach((item) => { item.roomIds = (item.item_rooms || []).map((ir) => ir.room_id); });
 
   const listEl = document.getElementById("inventory-list");
   const headerButtons = document.getElementById("supply-manage-wrap");
@@ -738,9 +757,11 @@ async function loadInventory() {
 
   const groups = {};
   items.forEach((item) => {
-    const key = item.room_id || "none";
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(item);
+    const keys = item.roomIds.length ? item.roomIds : ["none"];
+    keys.forEach((key) => {
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(item);
+    });
   });
 
   const inRoom = viewMode === "room" && roomFilter &&
@@ -756,11 +777,15 @@ async function loadInventory() {
     allBtn.classList.toggle("active", viewMode === "priority");
   }
 
-  const renderItem = (item) => {
+  const renderItem = (item, showRooms = false) => {
     if (item.id === editingItemId) return renderItemEditForm(item);
+    const roomsLabelHtml = (showRooms && item.roomIds.length)
+      ? `<div class="meta room-label">${item.roomIds.map((rid) => roomName(rid)).join(", ")}</div>`
+      : "";
     return `
       <div class="card">
         <div class="card-info">
+          ${roomsLabelHtml}
           <strong>${item.name}${item.category ? ` <span class="meta">(${item.category})</span>` : ""}</strong>
           <div class="meta">${item.last_restocked_at
             ? `Last restocked ${new Date(item.last_restocked_at).toLocaleDateString()}`
@@ -821,7 +846,7 @@ async function loadInventory() {
       document.getElementById("toggle-supply-manage-mode").checked = false;
       addItemForm.classList.add("hidden");
     }
-    listEl.innerHTML = items.map(renderItem).join("") || "<p>No items yet — add your first one above.</p>";
+    listEl.innerHTML = items.map((item) => renderItem(item, true)).join("") || "<p>No items yet — add your first one above.</p>";
   }
 }
 
@@ -833,18 +858,11 @@ async function setInventoryStatus(itemId, status) {
 }
 
 function renderItemEditForm(item) {
-  const roomOptions = roomsCache
-    .map((r) => `<option value="${r.id}" ${r.id === item.room_id ? "selected" : ""}>${r.name}</option>`)
-    .join("");
-
   return `
     <div class="add-form">
       <input type="text" id="edit-item-name-${item.id}" value="${item.name}" />
       <input type="text" id="edit-item-category-${item.id}" value="${item.category || ""}" placeholder="Category" />
-      <select id="edit-item-room-${item.id}">
-        <option value="">No room</option>
-        ${roomOptions}
-      </select>
+      ${roomTogglesHtml(`edit-item-rooms-${item.id}`, item.roomIds || [])}
       <div class="form-buttons">
         <button class="btn-primary" onclick="saveEditItem('${item.id}')">Save</button>
         <button class="btn-text" onclick="cancelEditItem()">Cancel</button>
@@ -866,10 +884,15 @@ async function saveEditItem(itemId) {
   const updates = {
     name: document.getElementById(`edit-item-name-${itemId}`).value,
     category: document.getElementById(`edit-item-category-${itemId}`).value || null,
-    room_id: document.getElementById(`edit-item-room-${itemId}`).value || null,
   };
 
   await db.from("inventory_items").update(updates).eq("id", itemId);
+
+  const roomIds = getSelectedRooms(`edit-item-rooms-${itemId}`);
+  await db.from("item_rooms").delete().eq("item_id", itemId);
+  if (roomIds.length) {
+    await db.from("item_rooms").insert(roomIds.map((rid) => ({ item_id: itemId, room_id: rid })));
+  }
 
   editingItemId = null;
   loadInventory();
@@ -879,18 +902,27 @@ const addItemForm = document.getElementById("add-item-form");
 document.getElementById("cancel-add-item").addEventListener("click", () => addItemForm.classList.add("hidden"));
 
 function openAddItemForm() {
-  document.getElementById("item-room").value = roomFilter && roomFilter !== "none" ? roomFilter : "";
+  const preselect = roomFilter && roomFilter !== "none" ? [roomFilter] : [];
+  document.getElementById("item-rooms-wrap").innerHTML = roomTogglesHtml("item-rooms", preselect);
   addItemForm.classList.remove("hidden");
 }
 
 addItemForm.addEventListener("submit", async (e) => {
   e.preventDefault();
-  await db.from("inventory_items").insert({
+  const { data: newItem, error: itemError } = await db.from("inventory_items").insert({
     name: document.getElementById("item-name").value,
     category: document.getElementById("item-category").value || null,
-    room_id: document.getElementById("item-room").value || null,
-  });
+  }).select().single();
+
+  if (!itemError && newItem) {
+    const roomIds = getSelectedRooms("item-rooms");
+    if (roomIds.length) {
+      await db.from("item_rooms").insert(roomIds.map((rid) => ({ item_id: newItem.id, room_id: rid })));
+    }
+  }
+
   addItemForm.reset();
+  document.getElementById("item-rooms-wrap").innerHTML = "";
   addItemForm.classList.add("hidden");
   loadInventory();
 });

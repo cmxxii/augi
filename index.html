@@ -159,12 +159,7 @@
         <form id="add-item-form" class="add-form hidden">
           <input type="text" id="item-name" placeholder="Item name (e.g. Trash bags)" required />
           <input type="text" id="item-category" placeholder="Category (optional, e.g. Cleaning)" />
-          <div class="field-with-icon">
-            <span class="material-symbols-rounded field-icon">nest_multi_room</span>
-            <select id="item-room">
-              <option value="">Room</option>
-            </select>
-          </div>
+          <div id="item-rooms-wrap"></div>
           <div class="form-buttons">
             <button type="submit" class="btn-primary">Save item</button>
             <button type="button" id="cancel-add-item" class="btn-text">Cancel</button>
