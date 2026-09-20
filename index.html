@@ -34,7 +34,7 @@
     <header class="top-bar">
       <div class="brand">
         <h1 id="home-link">augi</h1>
-        <button id="show-version" class="version-button">v0.4</button>
+        <button id="show-version" class="version-button"></button>
       </div>
       <div class="top-bar-actions">
         <nav class="tabs">
@@ -63,24 +63,12 @@
     <div id="version-modal" class="modal-overlay hidden">
       <div class="modal-box">
         <div class="modal-header">
-          <h3>What's new — v0.1</h3>
+          <h3 id="version-modal-title">What's new</h3>
           <button id="close-version" class="btn-text modal-close"><span class="material-symbols-rounded">close</span></button>
         </div>
 
-        <div class="version-notes">
-          <h4>v0.4</h4>
-          <ul>
-            <li>Chores can now be assigned to one or more of us — tap your name up top to see just yours.</li>
-            <li>Your name turns yellow or red if you have anything due today or overdue.</li>
-            <li>Supplies are now organized by room, same as chores.</li>
-          </ul>
-
-          <h4>v0.3</h4>
-          <ul>
-            <li>Rooms and All Tasks now stay in sync across Tasks, History, and Supplies.</li>
-            <li>Added a Manage switch for adding and editing things inside a room.</li>
-          </ul>
-        </div>
+        <div id="version-notes" class="version-notes"></div>
+        
 
         <div class="modal-actions">
           <button id="show-feedback" class="btn-text"><span class="material-symbols-rounded">problem</span> Feedback</button>

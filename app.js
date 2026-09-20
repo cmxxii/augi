@@ -245,6 +245,7 @@ db.auth.onAuthStateChange(async (_event, session) => {
   await loadRoomsCache();
   renderRoomOptions();
   document.getElementById("logged-in-name").textContent = displayName(currentUser);
+  loadVersionNotes();
   loadChores();
   loadInventory();
   loadGroceries();
@@ -293,6 +294,39 @@ document.getElementById("submit-feedback").addEventListener("click", async () =>
   document.getElementById("feedback-message").value = "";
   document.getElementById("feedback-modal").classList.add("hidden");
 });
+
+async function loadVersionNotes() {
+  const { data, error } = await db
+    .from("version_notes")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .order("sort_order");
+
+  const container = document.getElementById("version-notes");
+  if (error || !data || !data.length) {
+    container.innerHTML = "<p>No notes yet.</p>";
+    return;
+  }
+
+  const versions = [];
+  const grouped = {};
+  data.forEach((row) => {
+    if (!grouped[row.version]) {
+      grouped[row.version] = [];
+      versions.push(row.version);
+    }
+    grouped[row.version].push(row.note);
+  });
+
+  document.getElementById("show-version").textContent = versions[0];
+  document.getElementById("version-modal-title").textContent = `What's new — ${versions[0]}`;
+
+  container.innerHTML = versions
+    .map((v) => `
+      <h4>${v}</h4>
+      <ul>${grouped[v].map((n) => `<li>${n}</li>`).join("")}</ul>`)
+    .join("");
+}
 
 document.getElementById("show-version").addEventListener("click", () => {
   document.getElementById("version-modal").classList.remove("hidden");
