@@ -75,7 +75,7 @@ body {
   font-family: "Playwrite ES", sans-serif;
   font-size: 1.6rem;
   margin: 0;
-  color: var(--color-shui);
+  color: var(--color-text-muted);
 }
 
 .who-am-i {
@@ -97,7 +97,7 @@ body {
 }
 
 #home-link:hover {
-  color: var(--color-text-muted);
+  color: var(--color-stui);
 }
 
 .assignee-toggles {
@@ -271,7 +271,7 @@ body {
 }
 
 .panel-header h2 {
-  font-family: "Playwrite PE", "SN Pro", sans-serif;
+  font-family: "Playwrite ES", "SN Pro", sans-serif;
   margin: 0;
   font-size: 30pt;
   font-weight: 700;
