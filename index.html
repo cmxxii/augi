@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playwrite+ES:wght@100..400&family=SN+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playwrite+ES:wght@100..400&family=Playwrite+PE:wght@100..400&family=SN+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=language,takeout_dining,grocery,nutrition,shelves,heart_smile,house,family_group,close,face,face_2,face_3,face_4,arrow_back,dine_lamp,directions_car,assignment,sort,history,task_alt,event,edit_square,hourglass_empty,label_important,problem,add_circle,delete,door_open,home_storage,nest_multi_room,bed,chair,kitchen,table_restaurant,garage_door,household_supplies,hallway,faucet,stairs,shopping_basket&display=block" />
 </head>
 <body>
@@ -39,11 +39,12 @@
       <div class="top-bar-actions">
         <nav class="tabs">
           <button class="tab-button icon-button active" data-tab="chores-tab" title="Chores"><span class="material-symbols-rounded">nest_multi_room</span></button>
-          <button class="tab-button icon-button" data-tab="groceries-tab" title="Pantry — coming soon" disabled><span class="material-symbols-rounded">nutrition</span></button>
+          <button class="tab-button icon-button" data-tab="groceries-tab" title="Pantry"><span class="material-symbols-rounded">nutrition</span></button>
         </nav>
-        <div class="who-am-i">
-          <button id="logged-in-name" class="user-button"></button>
-        </div>
+      </div>
+
+       <div class="who-am-i">
+        <button id="logged-in-name" class="user-button"></button>
       </div>
     </header>
 
@@ -89,6 +90,10 @@
 
  <!-- CHORES TAB -->
     <main id="chores-tab" class="tab-panel active" data-subtab="chores-todo-subtab">
+      <div class="panel-header">
+        <h2>Chores</h2>
+        <div id="chore-stats" class="panel-stats"></div>
+      </div>
       <div class="subtab-nav">
         <button class="subtab-button active" data-subtab="chores-todo-subtab"><span class="material-symbols-rounded">assignment</span> Tasks</button>
         <button class="subtab-button" data-subtab="chores-history-subtab"><span class="material-symbols-rounded">history</span> History</button>

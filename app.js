@@ -483,6 +483,7 @@ async function loadChores() {
   const allTasksBtn = document.querySelector('.sort-btn[data-sort="priority"]');
   const withDue = chores.map((c) => ({ chore: c, due: nextDueDate(c) }));
   updateUserButtonState(withDue);
+  updateChoreStats(withDue);
 
   const groups = {};
   withDue.forEach(({ chore, due }) => {
@@ -575,6 +576,40 @@ function backToRooms() {
   loadChores();
   loadHistory();
   loadInventory();
+}
+
+function updateChoreStats(withDue) {
+  const el = document.getElementById("chore-stats");
+  if (!el) return;
+
+  const statuses = withDue.map(({ due }) => dueStatus(due).className);
+  const total = withDue.length;
+  const today = statuses.filter((s) => s === "due-today").length;
+  const overdue = statuses.filter((s) => s === "due-overdue").length;
+
+  const blocks = [`
+    <div class="stat">
+      <div class="stat-value">${total}</div>
+      <div class="stat-label">Tasks</div>
+    </div>`];
+
+  if (today > 0) {
+    blocks.push(`
+      <div class="stat">
+        <div class="stat-value due-today">${today}</div>
+        <div class="stat-label">Today</div>
+      </div>`);
+  }
+
+  if (overdue > 0) {
+    blocks.push(`
+      <div class="stat">
+        <div class="stat-value due-overdue">${overdue}</div>
+        <div class="stat-label">Overdue</div>
+      </div>`);
+  }
+
+  el.innerHTML = blocks.join("");
 }
 
 function updateUserButtonState(withDue) {
