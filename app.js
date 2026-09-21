@@ -52,7 +52,7 @@ function renderRoomOptions() {
     if (!select) return;
     const current = select.value;
     select.innerHTML =
-      `<option value="">No room</option>` +
+      `<option value="">Select a room</option>` +
       roomsCache.map((r) => `<option value="${r.id}">${r.name}</option>`).join("");
     select.value = current;
   });
@@ -578,6 +578,17 @@ function backToRooms() {
   loadInventory();
 }
 
+function goToChoreRoom(roomId) {
+  document.getElementById("my-chores-modal").classList.add("hidden");
+
+  viewMode = "room";
+  roomFilter = roomId;
+
+  document.querySelector('.subtab-button[data-subtab="chores-todo-subtab"]').click();
+  loadHistory();
+  loadInventory();
+}
+
 function updateChoreStats(withDue) {
   const el = document.getElementById("chore-stats");
   if (!el) return;
@@ -642,7 +653,11 @@ document.getElementById("logged-in-name").addEventListener("click", async () => 
 
   document.getElementById("my-chores-title").textContent = `Chores assigned to ${displayName(currentUser)}`;
   document.getElementById("my-chores-list").innerHTML =
-    mine.map(({ chore, due }) => renderChoreCard(chore, due, true)).join("") || "<p>No chores assigned to you.</p>";
+    mine.map(({ chore, due }) => {
+      const card = renderChoreCard(chore, due, true);
+      if (!chore.room_id) return card;
+      return `<div class="chore-link" onclick="if (!event.target.closest('button')) goToChoreRoom('${chore.room_id}')">${card}</div>`;
+    }).join("") || "<p>No chores assigned to you.</p>";
     document.getElementById("secret-pantry")
     .classList.toggle("hidden", displayName(currentUser) !== "CPP");
 
@@ -796,7 +811,7 @@ addChoreForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const { data: newChore, error } = await db.from("chores").insert({
     name: document.getElementById("chore-name").value,
-    room_id: document.getElementById("chore-room").value || null,
+    room_id: document.getElementById("chore-room").value,
     frequency_type: "interval_days",
     frequency_interval_days: Number(document.getElementById("chore-interval-days").value),
     frequency_weekdays: null,

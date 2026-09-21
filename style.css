@@ -647,6 +647,14 @@ select {
   font-weight: 600;
 }
 
+.chore-link {
+  cursor: pointer;
+}
+
+.chore-link:hover .card {
+  border-color: var(--color-accent);
+}
+
 .status-buttons {
   display: flex;
   gap: 6px;
