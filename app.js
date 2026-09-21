@@ -17,15 +17,19 @@ let supplyManageMode = false;
 let editingItemId = null;
 
 // Room selection dropdown
-let roomsCache = []; // [{id, name}]
+let roomsCache = []; // active rooms only — used for lists, cards, and form toggles
+let allRooms = []; // every room including archived — used for name/icon lookups
 
 async function loadRoomsCache() {
   const { data, error } = await db.from("rooms").select("*").order("sorting");
-  if (!error && data) roomsCache = data;
+  if (!error && data) {
+    allRooms = data;
+    roomsCache = data.filter((r) => !r.archived);
+  }
 }
 
 function roomName(roomId) {
-  const room = roomsCache.find((r) => r.id === roomId);
+  const room = allRooms.find((r) => r.id === roomId);
   return room ? room.name : "No room";
 }
 
@@ -91,7 +95,7 @@ async function loadHistory() {
     const choreName = c.chores?.name || "Unknown chore";
     let roomLabelHtml = "";
     if (showRoomLabel) {
-      const roomIconKey = c.chores?.room_id ? (roomsCache.find((r) => r.id === c.chores.room_id)?.wip_icon || "") : "";
+      const roomIconKey = c.chores?.room_id ? (allRooms.find((r) => r.id === c.chores.room_id)?.wip_icon || "") : "";
       const roomLabelText = c.chores?.room_id ? roomName(c.chores.room_id) : "No room";
       roomLabelHtml = `<div class="meta room-label">${roomIcon(roomIconKey)} ${roomLabelText}</div>`;
     }
@@ -319,7 +323,7 @@ async function loadVersionNotes() {
   });
 
   document.getElementById("show-version").textContent = versions[0];
-  document.getElementById("version-modal-title").textContent = `What's new — ${versions[0]}`;
+  document.getElementById("version-modal-title").textContent = `Working Prototype — ${versions[0]}`;
 
   container.innerHTML = versions
     .map((v) => `
@@ -637,7 +641,7 @@ function renderChoreCard(chore, due, showRoomLabel) {
   const status = dueStatus(due);
     let roomLabelHtml = "";
   if (showRoomLabel) {
-    const roomIconKey = chore.room_id ? (roomsCache.find((r) => r.id === chore.room_id)?.wip_icon || "") : "";
+    const roomIconKey = chore.room_id ? (allRooms.find((r) => r.id === chore.room_id)?.wip_icon || "") : "";
     const roomLabelText = chore.room_id ? roomName(chore.room_id) : "No room";
     roomLabelHtml = `<div class="meta room-label">${roomIcon(roomIconKey)} ${roomLabelText}</div>`;
   }
